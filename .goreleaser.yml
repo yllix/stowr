@@ -158,6 +158,8 @@ dockers:
 
 docker_manifests:
   - name_template: "ghcr.io/yllix/stowr:latest"
+    # Release candidates must not move the floating tags.
+    skip_push: auto
     image_templates:
       - "ghcr.io/yllix/stowr:{{ .Tag }}-amd64"
       - "ghcr.io/yllix/stowr:{{ .Tag }}-arm64"
@@ -168,12 +170,16 @@ docker_manifests:
       - "ghcr.io/yllix/stowr:{{ .Tag }}-arm64"
       - "ghcr.io/yllix/stowr:{{ .Tag }}-armv7"
   - name_template: "ghcr.io/yllix/stowr:v{{ .Major }}"
+    # Release candidates must not move the floating tags.
+    skip_push: auto
     image_templates:
       - "ghcr.io/yllix/stowr:v{{ .Major }}-amd64"
       - "ghcr.io/yllix/stowr:v{{ .Major }}-arm64"
       - "ghcr.io/yllix/stowr:v{{ .Major }}-armv7"
   ## s6 image manifests
   - name_template: "ghcr.io/yllix/stowr:s6"
+    # Release candidates must not move the floating tags.
+    skip_push: auto
     image_templates:
       - "ghcr.io/yllix/stowr:{{ .Tag }}-amd64-s6"
       - "ghcr.io/yllix/stowr:{{ .Tag }}-arm64-s6"
@@ -182,6 +188,12 @@ docker_manifests:
       - "ghcr.io/yllix/stowr:{{ .Tag }}-amd64-s6"
       - "ghcr.io/yllix/stowr:{{ .Tag }}-arm64-s6"
   - name_template: "ghcr.io/yllix/stowr:v{{ .Major }}-s6"
+    # Release candidates must not move the floating tags.
+    skip_push: auto
     image_templates:
       - "ghcr.io/yllix/stowr:v{{ .Major }}-amd64-s6"
       - "ghcr.io/yllix/stowr:v{{ .Major }}-arm64-s6"
+
+release:
+  # Tags like v3.0.0-rc.1 are published as pre-releases.
+  prerelease: auto
