@@ -220,7 +220,7 @@ var resourcePutHandler = withUser(func(w http.ResponseWriter, r *http.Request, d
 })
 
 func resourcePatchHandler(fileCache FileCache) handleFunc {
-	return withUser(func(_ http.ResponseWriter, r *http.Request, d *data) (int, error) {
+	return withUser(func(w http.ResponseWriter, r *http.Request, d *data) (int, error) {
 		src := r.URL.Path
 		dst := r.URL.Query().Get("destination")
 		action := r.URL.Query().Get("action")
