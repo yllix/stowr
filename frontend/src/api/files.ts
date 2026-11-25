@@ -1,5 +1,7 @@
 import { useAuthStore } from "@/stores/auth";
 import { useLayoutStore } from "@/stores/layout";
+import { useJobsStore } from "@/stores/jobs";
+import type { Job } from "./jobs";
 import { baseURL } from "@/utils/constants";
 import { upload as postTus, useTus } from "./tus";
 import { createURL, fetchURL, removePrefix, StatusError } from "./utils";
@@ -171,7 +173,7 @@ async function postResources(
   });
 }
 
-function moveCopy(
+async function moveCopy(
   items: any[],
   copy = false,
   overwrite = false,
@@ -188,11 +190,29 @@ function moveCopy(
     const finalRename = item.rename == undefined ? rename : item.rename;
     const url = `${from}?action=${
       copy ? "copy" : "rename"
-    }&destination=${to}&override=${finalOverwrite}&rename=${finalRename}`;
-    promises.push(resourceAction(url, "PATCH"));
+    }&destination=${to}&override=${finalOverwrite}&rename=${finalRename}&async=true`;
+    promises.push(runJob(url));
   }
   layoutStore.closeHovers();
   return Promise.all(promises);
+}
+
+// runJob submits a copy or move as a background job on the server and
+// resolves once it has finished, so callers can treat it like a normal
+// request while the task panel shows its progress. A job the user cancelled
+// resolves normally; a failed one rejects with the server's message.
+async function runJob(url: string): Promise<Job> {
+  const jobsStore = useJobsStore();
+  const res = await resourceAction(url, "PATCH");
+  const job = (await res.json()) as Job;
+
+  jobsStore.track(job);
+  const done = await jobsStore.wait(job.id);
+
+  if (done.status === "failed") {
+    throw new StatusError(done.error || "operation failed", 500);
+  }
+  return done;
 }
 
 export function move(items: any[], overwrite = false, rename = false) {

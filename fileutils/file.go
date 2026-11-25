@@ -1,6 +1,7 @@
 package fileutils
 
 import (
+	"context"
 	"io"
 	"io/fs"
 	"os"
@@ -14,11 +15,20 @@ import (
 // By default the rename filesystem system call is used. If src and dst point to different volumes
 // the file copy is used as a fallback
 func MoveFile(afs afero.Fs, src, dst string, fileMode, dirMode fs.FileMode) error {
+	return MoveFileContext(context.Background(), afs, src, dst, fileMode, dirMode, nil)
+}
+
+// MoveFileContext is MoveFile with cancellation and progress reporting for
+// the copy fallback. A same-volume rename is atomic and reports no progress.
+func MoveFileContext(ctx context.Context, afs afero.Fs, src, dst string, fileMode, dirMode fs.FileMode, p Progress) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if afs.Rename(src, dst) == nil {
 		return nil
 	}
 	// fallback
-	err := Copy(afs, src, dst, fileMode, dirMode)
+	err := CopyContext(ctx, afs, src, dst, fileMode, dirMode, p)
 	if err != nil {
 		_ = afs.Remove(dst)
 		return err
@@ -32,6 +42,14 @@ func MoveFile(afs afero.Fs, src, dst string, fileMode, dirMode fs.FileMode) erro
 // CopyFile copies a file from source to dest and returns
 // an error if any.
 func CopyFile(afs afero.Fs, source, dest string, fileMode, dirMode fs.FileMode) error {
+	return copyFile(context.Background(), afs, source, dest, fileMode, dirMode, nil)
+}
+
+func copyFile(ctx context.Context, afs afero.Fs, source, dest string, fileMode, dirMode fs.FileMode, p Progress) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	// Open the source file.
 	src, err := afs.Open(source)
 	if err != nil {
@@ -54,7 +72,7 @@ func CopyFile(afs afero.Fs, source, dest string, fileMode, dirMode fs.FileMode) 
 	defer dst.Close()
 
 	// Copy the contents of the file.
-	_, err = io.Copy(dst, src)
+	_, err = io.CopyBuffer(dst, &progressReader{ctx: ctx, r: src, p: p}, make([]byte, copyBufferSize))
 	if err != nil {
 		return err
 	}
@@ -67,6 +85,10 @@ func CopyFile(afs afero.Fs, source, dest string, fileMode, dirMode fs.FileMode) 
 	err = afs.Chmod(dest, info.Mode())
 	if err != nil {
 		return err
+	}
+
+	if p != nil {
+		p.FileDone()
 	}
 
 	return nil

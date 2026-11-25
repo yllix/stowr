@@ -245,9 +245,9 @@ func resourcePatchHandler(fileCache FileCache) handleFunc {
 		srcInfo, _ := d.user.Fs.Stat(src)
 		dstInfo, _ := d.user.Fs.Stat(dst)
 		same := os.SameFile(srcInfo, dstInfo)
+		override := r.URL.Query().Get("override") == "true"
 
 		if action != "rename" || !same {
-			override := r.URL.Query().Get("override") == "true"
 			rename := r.URL.Query().Get("rename") == "true"
 			if !override && !rename {
 				if _, err = d.user.Fs.Stat(dst); err == nil {
@@ -267,8 +267,15 @@ func resourcePatchHandler(fileCache FileCache) handleFunc {
 			return errToStatus(err), err
 		}
 
+		if r.URL.Query().Get("async") == "true" {
+			return submitPatchJob(w, action, src, dst, override, d, fileCache)
+		}
+
+		// The operation is not cancelled if the client disconnects part-way:
+		// stopping a copy half-way would leave a partial tree behind.
+		ctx := context.WithoutCancel(r.Context())
 		err = d.RunHook(func() error {
-			return patchAction(r.Context(), action, src, dst, d, fileCache)
+			return patchAction(ctx, action, src, dst, d, fileCache, nil)
 		}, action, src, dst, d.user)
 
 		return errToStatus(err), err
@@ -387,14 +394,16 @@ func delThumbs(ctx context.Context, fileCache FileCache, file *files.FileInfo) e
 	return nil
 }
 
-func patchAction(ctx context.Context, action, src, dst string, d *data, fileCache FileCache) error {
+// patchAction performs a copy or rename (move). ctx cancels the operation and
+// p, when not nil, receives progress updates.
+func patchAction(ctx context.Context, action, src, dst string, d *data, fileCache FileCache, p fileutils.Progress) error {
 	switch action {
 	case "copy":
 		if !d.user.Perm.Create {
 			return fberrors.ErrPermissionDenied
 		}
 
-		return fileutils.Copy(d.user.Fs, src, dst, d.settings.FileMode, d.settings.DirMode)
+		return fileutils.CopyContext(ctx, d.user.Fs, src, dst, d.settings.FileMode, d.settings.DirMode, p)
 	case "rename":
 		if !d.user.Perm.Rename {
 			return fberrors.ErrPermissionDenied
@@ -420,7 +429,7 @@ func patchAction(ctx context.Context, action, src, dst string, d *data, fileCach
 			return err
 		}
 
-		return fileutils.MoveFile(d.user.Fs, src, dst, d.settings.FileMode, d.settings.DirMode)
+		return fileutils.MoveFileContext(ctx, d.user.Fs, src, dst, d.settings.FileMode, d.settings.DirMode, p)
 	default:
 		return fmt.Errorf("unsupported action %s: %w", action, fberrors.ErrInvalidRequestParams)
 	}

@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file. See [commit
 
 Stowr is forked from File Browser v2.63.23. Entries below this section are File Browser's history.
 
+### Features
+
+* background tasks: copy and move run as server-side jobs with live progress (bytes and files), so large operations no longer depend on one long HTTP request. A task panel shows running jobs and lets you cancel them; cancelling a copy removes the partial copy. New API: `GET /api/jobs`, `GET /api/jobs/{id}`, `DELETE /api/jobs/{id}`, and `async=true` on the copy/move `PATCH` request
+* copies use a 256 KiB buffer instead of 32 KiB, which is faster on spinning disks and network storage
+
 ### Changes
 
 * rename the project to Stowr: Go module `github.com/yllix/stowr/v3`, binary `stowr`, images `ghcr.io/yllix/stowr`
