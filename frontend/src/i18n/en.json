@@ -308,5 +308,19 @@
     "minutes": "Minutes",
     "seconds": "Seconds",
     "unit": "Time Unit"
+  },
+  "jobs": {
+    "title": "Background tasks ({count})",
+    "toggle": "Show or hide background tasks",
+    "queued": "Waiting to start…",
+    "running": "Working…",
+    "progress": "{done} of {total} · {files} of {totalFiles} files",
+    "done": "Done",
+    "canceled": "Cancelled",
+    "failed": "Failed: {error}",
+    "cancel": "Cancel task",
+    "confirmCancel": "Cancel this task? A partial copy will be removed.",
+    "dismiss": "Dismiss",
+    "clearFinished": "Clear finished tasks"
   }
 }

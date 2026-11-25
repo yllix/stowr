@@ -74,6 +74,10 @@ func NewHandler(
 
 	api.PathPrefix("/usage").Handler(monkey(diskUsage, "/api/usage")).Methods("GET")
 
+	api.Handle("/jobs", monkey(jobsListHandler, "")).Methods("GET")
+	api.Handle("/jobs/{id:[a-f0-9]+}", monkey(jobGetHandler, "")).Methods("GET")
+	api.Handle("/jobs/{id:[a-f0-9]+}", monkey(jobCancelHandler, "")).Methods("DELETE")
+
 	api.Handle("/shares", monkey(shareListHandler, "")).Methods("GET")
 	api.PathPrefix("/share").Handler(monkey(shareGetsHandler, "/api/share")).Methods("GET")
 	api.PathPrefix("/share").Handler(monkey(sharePostHandler, "/api/share")).Methods("POST")

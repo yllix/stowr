@@ -1,6 +1,7 @@
 package fileutils
 
 import (
+	"context"
 	"errors"
 	"io/fs"
 
@@ -11,6 +12,14 @@ import (
 // of its sub-directories. It doesn't stop if it finds an error
 // during the copy. Returns an error if any.
 func CopyDir(afs afero.Fs, source, dest string, fileMode, dirMode fs.FileMode) error {
+	return copyDir(context.Background(), afs, source, dest, fileMode, dirMode, nil)
+}
+
+func copyDir(ctx context.Context, afs afero.Fs, source, dest string, fileMode, dirMode fs.FileMode, p Progress) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	// Get properties of source.
 	srcinfo, err := afs.Stat(source)
 	if err != nil {
@@ -37,21 +46,27 @@ func CopyDir(afs afero.Fs, source, dest string, fileMode, dirMode fs.FileMode) e
 	var errs []error
 
 	for _, obj := range obs {
+		// Stop promptly on cancellation instead of collecting one
+		// "context canceled" error per remaining entry.
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
 		fsource := source + "/" + obj.Name()
 		fdest := dest + "/" + obj.Name()
 
 		if obj.IsDir() {
 			// Create sub-directories, recursively.
-			err = CopyDir(afs, fsource, fdest, fileMode, dirMode)
-			if err != nil {
-				errs = append(errs, err)
-			}
+			err = copyDir(ctx, afs, fsource, fdest, fileMode, dirMode, p)
 		} else {
 			// Perform the file copy.
-			err = CopyFile(afs, fsource, fdest, fileMode, dirMode)
-			if err != nil {
-				errs = append(errs, err)
+			err = copyFile(ctx, afs, fsource, fdest, fileMode, dirMode, p)
+		}
+		if err != nil {
+			if ctxErr := ctx.Err(); ctxErr != nil {
+				return ctxErr
 			}
+			errs = append(errs, err)
 		}
 	}
 
