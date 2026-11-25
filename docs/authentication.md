@@ -1,19 +1,19 @@
 # Authentication
 
-There are three possible authentication methods. Each one of them has its own capabilities and specification. Adding another authentication method is described in [Building File Browser](../CONTRIBUTING.md#authentication-provider).
+There are three possible authentication methods. Each one of them has its own capabilities and specification. Adding another authentication method is described in [Building Stowr](../CONTRIBUTING.md#authentication-provider).
 
 ## JSON Auth (default)
 
 We call it JSON Authentication but it is just the default authentication method and the one that is provided by default if you don't make any changes. It is set by default, but if you've made changes before you can revert to using JSON auth:
 
 ```sh
-filebrowser config set --auth.method=json
+stowr config set --auth.method=json
 ```
 
 This method can also be extended with **reCAPTCHA** verification during login:
 
 ```sh
-filebrowser config set --auth.method=json \
+stowr config set --auth.method=json \
   --recaptcha.key site-key \
   --recaptcha.secret private-key
 ```
@@ -21,7 +21,7 @@ filebrowser config set --auth.method=json \
 By default, we use [Google's reCAPTCHA](https://developers.google.com/recaptcha/docs/display) service. If you live in China, or want to use other provider, you can change the host with the following command:
 
 ```sh
-filebrowser config set --recaptcha.host https://recaptcha.net
+stowr config set --recaptcha.host https://recaptcha.net
 ```
 
 Where `https://recaptcha.net` is any provider you want.
@@ -31,14 +31,14 @@ Where `https://recaptcha.net` is any provider you want.
 If you have a reverse proxy you want to use to login your users, you do it via our `proxy` authentication method. To configure this method, your proxy must send an HTTP header containing the username of the logged in user:
 
 ```sh
-filebrowser config set --auth.method=proxy --auth.header=X-My-Header
+stowr config set --auth.method=proxy --auth.header=X-My-Header
 ```
 
 Where `X-My-Header` is the HTTP header provided by your proxy with the username.
 
 > [!WARNING]
 > 
-> File Browser will blindly trust the provided header. If the proxy can be bypassed, an attacker could simply attach the header and get admin access. Please ensure that File Browser is not accessible from untrusted networks, and that the proxy is correctly configured to strip/overwrite the header from client requests.
+> Stowr will blindly trust the provided header. If the proxy can be bypassed, an attacker could simply attach the header and get admin access. Please ensure that Stowr is not accessible from untrusted networks, and that the proxy is correctly configured to strip/overwrite the header from client requests.
 
 ## Hook Authentication
 
@@ -48,12 +48,12 @@ The hook’s output controls user permissions, scope, locale, and other attribut
 
 > [!WARNING]
 >
-> The submitted username and password are attacker-controlled and are handed to your hook command as the `USERNAME` and `PASSWORD` environment variables. File Browser runs the command directly, without a shell, so the values themselves are inert. However, your script must treat them as untrusted: always quote them (`"$USERNAME"`, `"$PASSWORD"`) and never pass them unquoted to a shell, `eval`, `bash -c`, command substitution, or backticks. A hook script that shell-evaluates these values turns any login request into remote code execution.
+> The submitted username and password are attacker-controlled and are handed to your hook command as the `USERNAME` and `PASSWORD` environment variables. Stowr runs the command directly, without a shell, so the values themselves are inert. However, your script must treat them as untrusted: always quote them (`"$USERNAME"`, `"$PASSWORD"`) and never pass them unquoted to a shell, `eval`, `bash -c`, command substitution, or backticks. A hook script that shell-evaluates these values turns any login request into remote code execution.
 
 For example, the following code delegates filebrowser authentication to a PowerShell script on Windows. You can configure any command (for example, a script in Python, Node.js, etc.).
 
 ```sh
-filebrowser config set --auth.method=hook --auth.command="powershell.exe -File C:\route\to\your\script\auth.ps1"
+stowr config set --auth.method=hook --auth.command="powershell.exe -File C:\route\to\your\script\auth.ps1"
 ```
 
 This is the code for the auth.ps1 script
@@ -160,8 +160,8 @@ user.scope=/
 
 ## No Authentication
 
-We also provide a no authentication mechanism for users that want to use File Browser privately such in a home network. By setting this authentication method, the user with **id 1** will be used as the default users. Creating more users won't have any effect.
+We also provide a no authentication mechanism for users that want to use Stowr privately such in a home network. By setting this authentication method, the user with **id 1** will be used as the default users. Creating more users won't have any effect.
 
 ```sh
-filebrowser config set --auth.method=noauth
+stowr config set --auth.method=noauth
 ```

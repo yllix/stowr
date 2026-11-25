@@ -22,9 +22,9 @@ import (
 	"strings"
 	"time"
 
-	fberrors "github.com/filebrowser/filebrowser/v2/errors"
-	"github.com/filebrowser/filebrowser/v2/rules"
 	"github.com/spf13/afero"
+	fberrors "github.com/yllix/stowr/v3/errors"
+	"github.com/yllix/stowr/v3/rules"
 )
 
 var (

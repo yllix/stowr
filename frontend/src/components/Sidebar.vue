@@ -97,13 +97,13 @@
 
     <p class="credits">
       <span>
-        <span v-if="disableExternal">File Browser</span>
+        <span v-if="disableExternal">Stowr</span>
         <a
           v-else
           rel="noopener noreferrer"
           target="_blank"
-          href="https://github.com/filebrowser/filebrowser"
-          >File Browser</a
+          href="https://github.com/yllix/stowr"
+          >Stowr</a
         >
         <span> {{ " " }} {{ version }}</span>
       </span>

@@ -1,4 +1,4 @@
-module github.com/filebrowser/filebrowser/v2
+module github.com/yllix/stowr/v3
 
 go 1.25.0
 

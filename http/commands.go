@@ -12,7 +12,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/filebrowser/filebrowser/v2/runner"
+	"github.com/yllix/stowr/v3/runner"
 )
 
 const (

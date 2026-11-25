@@ -11,10 +11,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/filebrowser/filebrowser/v2/files"
-	"github.com/filebrowser/filebrowser/v2/fileutils"
-	"github.com/filebrowser/filebrowser/v2/users"
 	"github.com/mholt/archives"
+	"github.com/yllix/stowr/v3/files"
+	"github.com/yllix/stowr/v3/fileutils"
+	"github.com/yllix/stowr/v3/users"
 )
 
 func parseQueryFiles(r *http.Request, f *files.FileInfo, _ *users.User) ([]string, error) {

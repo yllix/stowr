@@ -23,14 +23,15 @@ import (
 	"github.com/spf13/viper"
 	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 
-	"github.com/filebrowser/filebrowser/v2/auth"
-	"github.com/filebrowser/filebrowser/v2/diskcache"
-	"github.com/filebrowser/filebrowser/v2/frontend"
-	fbhttp "github.com/filebrowser/filebrowser/v2/http"
-	"github.com/filebrowser/filebrowser/v2/img"
-	"github.com/filebrowser/filebrowser/v2/settings"
-	"github.com/filebrowser/filebrowser/v2/storage"
-	"github.com/filebrowser/filebrowser/v2/users"
+	"github.com/yllix/stowr/v3/auth"
+	"github.com/yllix/stowr/v3/diskcache"
+	"github.com/yllix/stowr/v3/frontend"
+	fbhttp "github.com/yllix/stowr/v3/http"
+	"github.com/yllix/stowr/v3/img"
+	"github.com/yllix/stowr/v3/settings"
+	"github.com/yllix/stowr/v3/storage"
+	"github.com/yllix/stowr/v3/users"
+	"github.com/yllix/stowr/v3/version"
 )
 
 var (
@@ -76,7 +77,7 @@ func init() {
 
 	cobra.MousetrapHelpText = ""
 
-	rootCmd.SetVersionTemplate("File Browser version {{printf \"%s\" .Version}}\n")
+	rootCmd.SetVersionTemplate("Stowr version {{printf \"%s\" .Version}}\n")
 
 	// Flags available across the whole program
 	persistent := rootCmd.PersistentFlags()
@@ -116,13 +117,13 @@ func addServerFlags(flags *pflag.FlagSet) {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   "filebrowser",
+	Use:   "stowr",
 	Short: "A stylish web-based file browser",
-	Long: `File Browser CLI lets you create the database to use with File Browser,
+	Long: `Stowr CLI lets you create the database to use with Stowr,
 manage your users and all the configurations without accessing the
 web interface.
 
-If you've never run File Browser, you'll need to have a database for
+If you've never run Stowr, you'll need to have a database for
 it. Don't worry: you don't need to setup a separate database server.
 We're using Bolt DB which is a single file database and all managed
 by ourselves.
@@ -133,7 +134,7 @@ The environment variables are prefixed by "FB_" followed by the flag name in
 UPPER_SNAKE_CASE. For example, the flag "--disablePreviewResize" is available
 as FB_DISABLE_PREVIEW_RESIZE.
 
-If "--config" is not specified, File Browser will look for a configuration
+If "--config" is not specified, Stowr will look for a configuration
 file named .filebrowser.{json, toml, yaml, yml} in the following directories:
 
 - ./
@@ -153,7 +154,7 @@ The precedence of the configuration values are as follows:
 - Database values
 - Defaults
 
-Also, if the database path doesn't exist, File Browser will enter into
+Also, if the database path doesn't exist, Stowr will enter into
 the quick setup mode and a new database will be bootstrapped and a new
 user created with the credentials from options "username" and "password".`,
 	RunE: withViperAndStore(func(_ *cobra.Command, _ []string, v *viper.Viper, st *store) error {
@@ -192,10 +193,8 @@ user created with the credentials from options "username" and "password".`,
 		}
 		setupLog(server.Log)
 
-		log.Println("NOTICE: File Browser is being wound down.")
-		log.Println("NOTICE: The project is archived on 2026-09-01, after which there will be no")
-		log.Println("NOTICE: further releases and no security fixes. Known unfixed issues are at")
-		log.Println("NOTICE: https://github.com/filebrowser/filebrowser/security/advisories")
+		log.Println("Stowr " + version.Version + " - a maintained continuation of File Browser")
+		log.Println("Report security issues at https://github.com/yllix/stowr/security")
 
 		root, err := filepath.Abs(server.Root)
 		if err != nil {
@@ -377,7 +376,7 @@ func getServerSettings(v *viper.Viper, st *storage.Storage) (*settings.Server, e
 		log.Println("WARNING: Command Runner feature enabled!")
 		log.Println("WARNING: This feature has known security vulnerabilities and should not")
 		log.Println("WARNING: you fully understand the risks involved. For more information")
-		log.Println("WARNING: read https://github.com/filebrowser/filebrowser/issues/5199")
+		log.Println("WARNING: read https://github.com/yllix/stowr/blob/master/docs/command-execution.md")
 	}
 
 	if server.FollowExternalSymlinks {
@@ -394,7 +393,7 @@ func getServerSettings(v *viper.Viper, st *storage.Storage) (*settings.Server, e
 		if !set.CreateUserDir && scopeIsRoot {
 			log.Println("WARNING: Signup is enabled without createUserDir and the default scope is")
 			log.Println("WARNING: the server root, so every self-registered user can read, modify and")
-			log.Println("WARNING: delete all files File Browser serves, including other users' files.")
+			log.Println("WARNING: delete all files Stowr serves, including other users' files.")
 			log.Println("WARNING: Enable createUserDir, or set a default scope other than the root.")
 		}
 	}

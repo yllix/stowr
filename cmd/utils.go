@@ -18,9 +18,9 @@ import (
 	"github.com/spf13/viper"
 	yaml "gopkg.in/yaml.v3"
 
-	"github.com/filebrowser/filebrowser/v2/settings"
-	"github.com/filebrowser/filebrowser/v2/storage"
-	"github.com/filebrowser/filebrowser/v2/storage/bolt"
+	"github.com/yllix/stowr/v3/settings"
+	"github.com/yllix/stowr/v3/storage"
+	"github.com/yllix/stowr/v3/storage/bolt"
 )
 
 const databasePermissions = 0640
@@ -99,7 +99,8 @@ func initViper(cmd *cobra.Command) (*viper.Viper, error) {
 		}
 		v.AddConfigPath(".")
 		v.AddConfigPath(home)
-		v.AddConfigPath("/etc/filebrowser/")
+		v.AddConfigPath("/etc/stowr/")
+		v.AddConfigPath("/etc/filebrowser/") // compatibility with File Browser
 		v.SetConfigName(".filebrowser")
 	} else {
 		v.SetConfigFile(cfgFile)
@@ -166,7 +167,7 @@ func withViperAndStore(fn func(cmd *cobra.Command, args []string, v *viper.Viper
 		case exists && options.expectsNoDatabase:
 			log.Fatal(path + " already exists")
 		case !exists && !options.expectsNoDatabase && !options.allowsNoDatabase:
-			log.Fatal(path + " does not exist. Please run 'filebrowser config init' first.")
+			log.Fatal(path + " does not exist. Please run 'stowr config init' first.")
 		case !exists && !options.expectsNoDatabase:
 			log.Println("WARNING: filebrowser.db can't be found. Initialing in " + strings.TrimSuffix(path, "filebrowser.db"))
 		}

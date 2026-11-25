@@ -1,9 +1,9 @@
 package settings
 
 import (
-	fberrors "github.com/filebrowser/filebrowser/v2/errors"
-	"github.com/filebrowser/filebrowser/v2/rules"
-	"github.com/filebrowser/filebrowser/v2/users"
+	fberrors "github.com/yllix/stowr/v3/errors"
+	"github.com/yllix/stowr/v3/rules"
+	"github.com/yllix/stowr/v3/users"
 )
 
 // StorageBackend is a settings storage backend.

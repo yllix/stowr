@@ -1,36 +1,63 @@
-> [!WARNING]
-> 
-> **File Browser is archived on 2026-09-01**. The last planned release has already shipped. There will be no further releases, bug fixes, or security fixes.   
-
 <p align="center">
-  <img src="./branding/banner.png" width="550"/>
+  <img src="branding/banner.svg" width="480" alt="stowr" />
 </p>
 
-File Browser provides a file managing interface within a specified directory and it can be used to upload, delete, preview and edit your files. It is a **create-your-own-cloud**-kind of software where you can just install it on your server, direct it to a path and access your files through a nice web interface.
+<p align="center">
+  <a href="https://github.com/yllix/stowr/actions/workflows/ci.yaml"><img src="https://github.com/yllix/stowr/actions/workflows/ci.yaml/badge.svg" alt="CI" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License" /></a>
+</p>
 
-**Background:** [Goodbye File Browser, for Real This Time](https://hacdias.com/2026/07/28/filebrowser/), July 2026.
+**Stowr** is a self-hosted web file manager. Point it at a directory and you get a clean web interface to browse, upload, download, preview, edit and share your files.
+
+Stowr is a **maintained continuation of [File Browser](https://github.com/filebrowser/filebrowser)**, which was archived on 2026-09-01. It keeps everything File Browser users rely on and focuses on security fixes and careful improvements.
+
+## Drop-in replacement for File Browser
+
+Stowr is designed so that existing File Browser installations can switch without migrating data:
+
+- The same database (`filebrowser.db`) and configuration file (`filebrowser.json`, `.filebrowser.*`) formats and default names.
+- The same `FB_*` environment variables and command-line flags.
+- The container image also ships a `/bin/filebrowser` symlink, so existing scripts and entrypoints keep working.
+
+To switch a Docker or Kubernetes deployment, change only the image:
+
+```sh
+# Docker
+docker run ... ghcr.io/yllix/stowr:latest
+
+# Kubernetes (e.g. TrueNAS SCALE)
+kubectl -n <namespace> set image deployment/<name> <container>=ghcr.io/yllix/stowr:<version>
+```
+
+Back up your database first: the first start upgrades it in place.
+
+## Roadmap
+
+1. **Security first.** Remove the command runner and hooks entirely, and replace stateless JWT sessions with server-side sessions that can be revoked (logout, password change, single-use refresh tokens).
+2. **Audit the published advisories.** Verify that every File Browser security advisory is fixed in Stowr.
+3. **Operations.** Built-in OIDC login, a Prometheus `/metrics` endpoint, structured and audit logging.
+4. **Container hardening.** An image that runs cleanly as non-root with a read-only root filesystem.
+
+## Installation
+
+See [docs/installation.md](docs/installation.md). Container images are published to [`ghcr.io/yllix/stowr`](https://github.com/yllix/stowr/pkgs/container/stowr) for `amd64`, `arm64` and `armv7`.
 
 ## Security
 
-Published advisories are listed under [security advisories](https://github.com/filebrowser/filebrowser/security/advisories),
-and reporting instructions are in [SECURITY.md](SECURITY.md). Two known issue classes
-remain unaddressed and will not be fixed:
+Until the roadmap's security items land, the same precautions as File Browser apply:
 
-- **Command execution, runner, and hooks.** This feature is plagued with vulnerabilities across many published advisories, and would need a full rewrite to be made safe. It is disabled by default; if you re-enable it with `--disable-exec=false`, treat the ability to run commands as equivalent to shell access on the host. Background: [#5199](https://github.com/filebrowser/filebrowser/issues/5199).
-- **Session and JWT handling.** Sessions are self-contained JWTs rather than server-side identifiers, so they cannot be revoked, which means that logout, password changes, and renewal leave previously issued tokens valid until they expire, and the same refresh token can be redeemed repeatedly. Assume a leaked token is valid until expiry. Background: [#5216](https://github.com/filebrowser/filebrowser/issues/5216).
+- **Do not expose it directly to the internet.** Put it behind a reverse proxy that terminates TLS and performs its own authentication, or reach it over a VPN.
+- **Keep command execution disabled** (the default).
+- **Run it unprivileged**, inside a container, with only the directories you intend to serve mounted into it.
 
-If you keep running File Browser, treat it as unmaintained software:
-
-- **Do not expose it directly to the internet.** Put it behind a reverse proxy that terminates TLS and performs its own authentication.
-- **Keep the command runner disabled.** It is off by default, so leave it off. See [#5199](https://github.com/filebrowser/filebrowser/issues/5199) and [`docs/command-execution.md`](docs/command-execution.md).
-- **Run it unprivileged, inside a container**, with only the directory you intend to serve mounted into it.
+Report vulnerabilities privately; see [SECURITY.md](SECURITY.md).
 
 ## Documentation
 
-Documentation on how to install, configure, and build this project lives in [`docs`](docs) in this repository.
+Documentation on installing, configuring and building Stowr is in [docs](docs/). [CONTRIBUTING.md](CONTRIBUTING.md) covers building and development.
 
-[CONTRIBUTING.md](CONTRIBUTING.md) documents how to build and develop the project, which remains useful to anyone forking it.
+## Credits and license
 
-## License
+Stowr is based on [File Browser](https://github.com/filebrowser/filebrowser), © File Browser Contributors, and keeps its full history. Stowr is not affiliated with or endorsed by the File Browser project. See [NOTICE](NOTICE) for details.
 
-[Apache License 2.0](LICENSE) © File Browser Contributors
+Licensed under the [Apache License 2.0](LICENSE).

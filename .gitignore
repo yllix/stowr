@@ -4,7 +4,9 @@ _old
 rice-box.go
 .idea/
 /filebrowser
+/stowr
 /filebrowser.exe
+/stowr.exe
 /dist
 .venv
 

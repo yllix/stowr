@@ -1,30 +1,22 @@
 # Security Policy
 
-## Supported Versions
+## Supported versions
 
-No version receives security fixes. The last planned release has already shipped and no further changes will be merged.
+Only the latest Stowr release receives security fixes.
 
-| Version | Supported |
-| ------- | --------- |
-| 2.x     | ❌        |
-| < 2.0   | ❌        |
+File Browser (the original project) is archived and receives no fixes. If you run File Browser, upgrading to Stowr is the supported path.
 
-## Before Reporting
+## Reporting a vulnerability
 
-This project is being wound down. To avoid duplicates, first check the [existing advisories](https://github.com/filebrowser/filebrowser/security/advisories) and open issues, and confirm:
+Please **do not open a public issue** for security problems.
 
-- **It concerns this project, not a fork.** Reports about code, features, or endpoints that don't exist here belong to the relevant fork.
-- **It isn't an already-known class** that remains unaddressed. Those are listed under [Security](README.md#security) in the README; reports covering them are likely to be closed as duplicates.
+Report privately through GitHub's [private vulnerability reporting](https://github.com/yllix/stowr/security/advisories/new). Include the affected version, steps to reproduce, and the impact you observed.
 
-## Reporting a Vulnerability
+Before reporting, check the [existing advisories](https://github.com/yllix/stowr/security/advisories). Many issues in File Browser's [published advisories](https://github.com/filebrowser/filebrowser/security/advisories) also apply to the code Stowr inherited; reports confirming that one of those still affects Stowr are welcome.
 
-Until 2026-09-01, report privately via the [Security](https://github.com/filebrowser/filebrowser/security) page. After that date this repository is read-only and reports can no longer be submitted.
+## Known issue classes
 
-Please include, where possible:
+These were inherited from File Browser and are being addressed first (see the README roadmap):
 
-- The commit the issue was found at
-- A plaintext proof of concept (no binaries)
-- Steps to reproduce
-- Recommended remediation, if any
-
-No fix will ship for any report: the last planned release has already shipped and no further changes will be merged. Reports may still be published as advisories so that people running File Browser can assess their exposure.
+- **Command execution, runner and hooks.** Disabled by default. If enabled, treat it as equivalent to shell access on the host. Planned for removal.
+- **Session and JWT handling.** Sessions are self-contained JWTs and cannot be revoked before they expire. Planned replacement with server-side sessions.

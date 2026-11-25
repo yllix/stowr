@@ -5,9 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/filebrowser/filebrowser/v2/rules"
-	"github.com/filebrowser/filebrowser/v2/settings"
-	"github.com/filebrowser/filebrowser/v2/users"
+	"github.com/yllix/stowr/v3/rules"
+	"github.com/yllix/stowr/v3/settings"
+	"github.com/yllix/stowr/v3/users"
 )
 
 func init() {

@@ -3,8 +3,8 @@
 set -e
 
 # Ensure configuration exists
-if [ ! -f "/config/settings.json" ]; then
-  cp -a /defaults/settings.json /config/settings.json
+if [ ! -f "/config/settings.json" ] && [ -w /config ]; then
+  cp /defaults/settings.json /config/settings.json
 fi
 
 # Extract config file path from arguments
@@ -32,4 +32,4 @@ if [ -z "$config_file" ]; then
   set -- --config=/config/settings.json "$@"                                                                                                       
 fi                                                                                                                                                                                                                                                                                                                                                             
 
-exec filebrowser "$@"
+exec stowr "$@"

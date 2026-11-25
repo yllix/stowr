@@ -1,0 +1,14 @@
+Stowr
+Copyright 2026 Yll Bajrami and Stowr contributors
+
+This product is a modified version of File Browser
+(https://github.com/filebrowser/filebrowser),
+Copyright 2018 File Browser Contributors,
+licensed under the Apache License, Version 2.0.
+
+Stowr was forked from File Browser at v2.63.23 (commit 833d908), after the
+original project was archived on 2026-09-01. Changes made since the fork are
+recorded in the git history and in CHANGELOG.md.
+
+"File Browser" is the name of the original project. Stowr is an independent
+project and is not affiliated with or endorsed by the File Browser maintainers.

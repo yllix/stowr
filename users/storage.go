@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	fberrors "github.com/filebrowser/filebrowser/v2/errors"
+	fberrors "github.com/yllix/stowr/v3/errors"
 )
 
 // StorageBackend is the interface to implement for a users storage.

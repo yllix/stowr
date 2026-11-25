@@ -7,9 +7,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/afero"
 
-	"github.com/filebrowser/filebrowser/v2/files"
-	"github.com/filebrowser/filebrowser/v2/settings"
-	"github.com/filebrowser/filebrowser/v2/storage"
+	"github.com/yllix/stowr/v3/files"
+	"github.com/yllix/stowr/v3/settings"
+	"github.com/yllix/stowr/v3/storage"
 )
 
 type modifyRequest struct {

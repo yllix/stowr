@@ -12,10 +12,10 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/golang-jwt/jwt/v5/request"
 
-	fbAuth "github.com/filebrowser/filebrowser/v2/auth"
-	fberrors "github.com/filebrowser/filebrowser/v2/errors"
-	"github.com/filebrowser/filebrowser/v2/settings"
-	"github.com/filebrowser/filebrowser/v2/users"
+	fbAuth "github.com/yllix/stowr/v3/auth"
+	fberrors "github.com/yllix/stowr/v3/errors"
+	"github.com/yllix/stowr/v3/settings"
+	"github.com/yllix/stowr/v3/users"
 )
 
 const (

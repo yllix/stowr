@@ -1,22 +1,22 @@
 # Customization
 
-You can customize the styles, branding and icons of your File Browser instance in order to give it a personal touch.
+You can customize the styles, branding and icons of your Stowr instance in order to give it a personal touch.
 
 ## Custom Branding
 
-You can customize File Browser to use your own branding. This includes the following:
+You can customize Stowr to use your own branding. This includes the following:
 
 - **Name**: the name of the instance that shows up on the tab title, login pages, and some other places.
 - **Disable External Links**: disables all external links, except to the documentation.
 - **Disable Used Percentage**: disables the disk usage information on the sidebar.
 - **Branding Folder**: directory which can contain two items:
   - `custom.css`, containing a global stylesheet to apply to all users.
-  - `img`, a directory which can replace all the [default logotypes](https://github.com/filebrowser/filebrowser/tree/master/frontend/public/img) from the application.
+  - `img`, a directory which can replace all the [default logotypes](https://github.com/yllix/stowr/tree/master/frontend/public/img) from the application.
 
 This can be configured by the administrator user, under **Settings → Global Settings**. You can also update the configuration directly using the [CLI](cli/filebrowser-config-set.md):
 
 ```sh
-filebrowser config set --branding.name "My Name" \
+stowr config set --branding.name "My Name" \
   --branding.files "/abs/path/to/my/dir" \
   --branding.disableExternal
 ```
@@ -27,7 +27,7 @@ filebrowser config set --branding.name "My Name" \
 
 ### Custom Icons
 
-To replace the default logotype and favicons, you need to create an `img` directory under the branding directory. The structure of this directory must mimic the one from the [default logotypes](https://github.com/filebrowser/filebrowser/tree/master/frontend/public/img):
+To replace the default logotype and favicons, you need to create an `img` directory under the branding directory. The structure of this directory must mimic the one from the [default logotypes](https://github.com/yllix/stowr/tree/master/frontend/public/img):
 
 ```
 img/

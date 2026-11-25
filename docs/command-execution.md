@@ -2,7 +2,7 @@
 
 > [!CAUTION]
 >
-> The **hook runner** and **interactive shell** functionalities have been disabled for all existent and new installations by default from version v2.33.8 and onwards, due to continuous and known security vulnerabilities. You should only use this feature if you are aware of all of the security risks involved. For more up to date information, consult issue [#5199](https://github.com/filebrowser/filebrowser/issues/5199).
+> The **hook runner** and **interactive shell** functionalities have been disabled for all existent and new installations by default from version v2.33.8 and onwards, due to continuous and known security vulnerabilities. You should only use this feature if you are aware of all of the security risks involved. For more up to date information, consult issue [#5199](https://github.com/yllix/stowr/issues/5199).
 
 ## Hook Runner
 
@@ -25,16 +25,16 @@ Also, during the execution of the commands set for those hooks, there will be so
 At this moment, you can edit the commands via the command line interface, using the following commands \(please check the flag `--help` to know more about them\):
 
 ```bash
-filebrowser cmds add before_copy "echo $FILE"
-filebrowser cmds rm before_copy 0
-filebrowser cmds ls
+stowr cmds add before_copy "echo $FILE"
+stowr cmds rm before_copy 0
+stowr cmds ls
 ```
 
 Or you can use the web interface to manage them via **Settings** → **Global Settings**.
 
 ## Interactive Shell
 
-Within File Browser you can toggle the shell (`< >` icon at the top right) and this will open a shell command window at the bottom of the screen. This functionality can be turned on using the environment variable `FB_DISABLE_EXEC=false` or the flag `--disable-exec=false`.
+Within Stowr you can toggle the shell (`< >` icon at the top right) and this will open a shell command window at the bottom of the screen. This functionality can be turned on using the environment variable `FB_DISABLE_EXEC=false` or the flag `--disable-exec=false`.
 
 By default no commands are available as the command list is empty. To enable commands these need to either be done on a per-user basis (including for the Admin user).
 
@@ -42,13 +42,13 @@ You can do this by adding them in Settings > User Management > (edit user) > Com
 
 > [!NOTE]
 > 
-> If using a proxy manager then remember to enable websockets support for the File Browser proxy
+> If using a proxy manager then remember to enable websockets support for the Stowr proxy
 
 > [!NOTE]
 > 
-> If using Docker and you want to add a new command that is not in the base image then you will need to build a custom Docker image using `filebrowser/filebrowser` as a base image.  For example to add 7z:
+> If using Docker and you want to add a new command that is not in the base image then you will need to build a custom Docker image using `ghcr.io/yllix/stowr` as a base image.  For example to add 7z:
 > 
 > ```docker
-> FROM filebrowser/filebrowser
+> FROM ghcr.io/yllix/stowr
 > RUN sudo apt install p7zip-full
 > ```

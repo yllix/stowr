@@ -8,11 +8,11 @@ import (
 
 	"github.com/tomasen/realip"
 
-	"github.com/filebrowser/filebrowser/v2/rules"
-	"github.com/filebrowser/filebrowser/v2/runner"
-	"github.com/filebrowser/filebrowser/v2/settings"
-	"github.com/filebrowser/filebrowser/v2/storage"
-	"github.com/filebrowser/filebrowser/v2/users"
+	"github.com/yllix/stowr/v3/rules"
+	"github.com/yllix/stowr/v3/runner"
+	"github.com/yllix/stowr/v3/settings"
+	"github.com/yllix/stowr/v3/storage"
+	"github.com/yllix/stowr/v3/users"
 )
 
 type handleFunc func(w http.ResponseWriter, r *http.Request, d *data) (int, error)

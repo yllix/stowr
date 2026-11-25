@@ -3,10 +3,10 @@ package users
 import (
 	"path/filepath"
 
-	fberrors "github.com/filebrowser/filebrowser/v2/errors"
-	"github.com/filebrowser/filebrowser/v2/files"
-	"github.com/filebrowser/filebrowser/v2/rules"
 	"github.com/spf13/afero"
+	fberrors "github.com/yllix/stowr/v3/errors"
+	"github.com/yllix/stowr/v3/files"
+	"github.com/yllix/stowr/v3/rules"
 )
 
 // ViewMode describes a view mode.

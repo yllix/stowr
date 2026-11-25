@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/filebrowser/filebrowser/v2/rules"
-	"github.com/filebrowser/filebrowser/v2/settings"
+	"github.com/yllix/stowr/v3/rules"
+	"github.com/yllix/stowr/v3/settings"
 )
 
 type settingsData struct {

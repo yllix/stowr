@@ -1,4 +1,4 @@
-# Building File Browser
+# Building Stowr
 
 This project is archived on 2026-09-01. Pull requests are not accepted and no further changes are merged. This document is kept as build documentation for anyone wishing to build the project from source.
 
@@ -12,7 +12,7 @@ The backend side of the application is written in [Go](https://golang.org/), whi
 We encourage you to use git to manage your fork. To clone the main repository, just run:
 
 ```bash
-git clone https://github.com/filebrowser/filebrowser
+git clone https://github.com/yllix/stowr
 ```
 
 We use [Taskfile](https://taskfile.dev/) to manage the different processes (building, releasing, etc) automatically.
@@ -53,7 +53,7 @@ If you want to develop the frontend, start a development server which watches fo
 pnpm run dev
 ```
 
-Please note that you need to access File Browser's interface through the development server of the frontend.
+Please note that you need to access Stowr's interface through the development server of the frontend.
 
 ### Backend
 
@@ -63,7 +63,7 @@ First prepare the backend environment by downloading all required dependencies:
 go mod download
 ```
 
-You can now build or run File Browser as any other Go project:
+You can now build or run Stowr as any other Go project:
 
 ```bash
 # Build
@@ -95,7 +95,7 @@ The Transifex integration stopped on 2026-09-01 and translations submitted there
 
 ## Authentication Provider
 
-To build a new authentication provider, you need to implement the [Auther interface](https://github.com/filebrowser/filebrowser/blob/master/auth/auth.go), whose method will be called on the login page after the user has submitted their login data.
+To build a new authentication provider, you need to implement the [Auther interface](https://github.com/yllix/stowr/blob/master/auth/auth.go), whose method will be called on the login page after the user has submitted their login data.
 
 ```go
 // Auther is the authentication interface.
@@ -107,9 +107,9 @@ type Auther interface {
 
 After implementing the interface you should:
 
-1. Add it to [`auth` directory](https://github.com/filebrowser/filebrowser/blob/master/auth).
-2. Add it to the [configuration parser](https://github.com/filebrowser/filebrowser/blob/master/cmd/config.go) for the CLI.
-3. Add it to the [`authBackend.Get`](https://github.com/filebrowser/filebrowser/blob/master/storage/bolt/auth.go).
+1. Add it to [`auth` directory](https://github.com/yllix/stowr/blob/master/auth).
+2. Add it to the [configuration parser](https://github.com/yllix/stowr/blob/master/cmd/config.go) for the CLI.
+3. Add it to the [`authBackend.Get`](https://github.com/yllix/stowr/blob/master/storage/bolt/auth.go).
 
 If you need to add more flags, please update the function `addConfigFlags`.
 

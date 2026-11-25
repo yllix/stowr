@@ -12,13 +12,13 @@ import (
 	"testing"
 
 	"github.com/asdine/storm/v3"
-	"github.com/filebrowser/filebrowser/v2/files"
-	"github.com/filebrowser/filebrowser/v2/settings"
-	"github.com/filebrowser/filebrowser/v2/share"
-	"github.com/filebrowser/filebrowser/v2/storage"
-	"github.com/filebrowser/filebrowser/v2/storage/bolt"
-	"github.com/filebrowser/filebrowser/v2/users"
 	"github.com/spf13/afero"
+	"github.com/yllix/stowr/v3/files"
+	"github.com/yllix/stowr/v3/settings"
+	"github.com/yllix/stowr/v3/share"
+	"github.com/yllix/stowr/v3/storage"
+	"github.com/yllix/stowr/v3/storage/bolt"
+	"github.com/yllix/stowr/v3/users"
 )
 
 // symlinkShareStorage builds a storage whose single user is rooted at a real

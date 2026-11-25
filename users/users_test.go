@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/filebrowser/filebrowser/v2/files"
 	"github.com/spf13/afero"
+	"github.com/yllix/stowr/v3/files"
 )
 
 // TestUserCleanFs verifies that Clean builds the user filesystem according to the

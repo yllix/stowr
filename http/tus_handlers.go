@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/filebrowser/filebrowser/v2/files"
 	"github.com/spf13/afero"
+	"github.com/yllix/stowr/v3/files"
 )
 
 // maxPatchDrainBytes bounds how much of a rejected PATCH body is discarded to
