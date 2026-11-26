@@ -38,12 +38,16 @@
           :aria-label="`${job.src} → ${job.dst}`"
         >
           <div class="file-name">
-            <i class="material-icons">{{
-              job.action === "copy" ? "content_copy" : "drive_file_move"
-            }}</i>
+            <i class="material-icons">{{ actionIcon(job) }}</i>
             <span class="job-name" :title="`${job.src} → ${job.dst}`">
-              {{ basename(job.src) }}
-              <span class="job-dest">→ {{ parentDir(job.dst) }}</span>
+              <template v-if="job.action === 'duplicates'">
+                {{ $t("jobs.duplicates") }}
+                <span class="job-dest">{{ job.src }}</span>
+              </template>
+              <template v-else>
+                {{ basename(job.src) }}
+                <span class="job-dest">→ {{ parentDir(job.dst) }}</span>
+              </template>
             </span>
             <button
               v-if="!isTerminal(job.status)"
@@ -94,6 +98,17 @@ const size = partial({ base: 2 });
 onMounted(() => {
   jobsStore.init();
 });
+
+function actionIcon(job: Job): string {
+  switch (job.action) {
+    case "copy":
+      return "content_copy";
+    case "duplicates":
+      return "find_in_page";
+    default:
+      return "drive_file_move";
+  }
+}
 
 function basename(p: string): string {
   const parts = p.split("/").filter(Boolean);

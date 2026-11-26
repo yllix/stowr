@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. See [commit
 * file index: Stowr keeps an in-memory index of file names, sizes and dates, rebuilt hourly and shortly after changes made through Stowr. Set `STOWR_INDEX_INTERVAL` to change the interval, or to `0` to turn it off
 * storage view: a new **Storage** page shows what is using space, folder by folder, with sizes, file counts and share of the total
 * fast search: search answers from the index instead of walking the disk, falling back to the disk walk when the index isn't ready
+* duplicate finder: find files with identical content under a folder as a background job, then review the groups and delete extra copies. Same-size files come from the index; each is fingerprinted from its first and last 64 KiB, and only matches are hashed in full (SHA-256). New API: `POST /api/duplicates/<path>?minSize=<bytes>`; the result is on `GET /api/jobs/{id}`
 
 ### Changes
 
