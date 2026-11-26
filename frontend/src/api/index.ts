@@ -6,5 +6,6 @@ import * as pub from "./pub";
 import search from "./search";
 import commands from "./commands";
 import * as jobs from "./jobs";
+import * as insights from "./insights";
 
-export { files, share, users, settings, pub, commands, search, jobs };
+export { files, share, users, settings, pub, commands, search, jobs, insights };

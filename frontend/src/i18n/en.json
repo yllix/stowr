@@ -264,9 +264,6 @@
     "shareManagement": "Share Management",
     "shareDeleted": "Share deleted!",
     "singleClick": "Use single clicks to open files and directories",
-    "sunsetBody": "This project is being wound down. It is archived on 2026-09-01, after which there will be no further releases, bug fixes, or security fixes. Existing releases and Docker images stay online. Do not expose this instance directly to the internet without authentication in front of it.",
-    "sunsetLink": "Read the project status, known unfixed security issues, and hardening guidance",
-    "sunsetTitle": "File Browser is being archived",
     "themes": {
       "default": "System default",
       "dark": "Dark",
@@ -297,7 +294,8 @@
     "preview": "Preview",
     "settings": "Settings",
     "signup": "Signup",
-    "siteSettings": "Site Settings"
+    "siteSettings": "Site Settings",
+    "storage": "Storage"
   },
   "success": {
     "linkCopied": "Link copied!"
@@ -322,5 +320,33 @@
     "confirmCancel": "Cancel this task? A partial copy will be removed.",
     "dismiss": "Dismiss",
     "clearFinished": "Clear finished tasks"
+  },
+  "storage": {
+    "openInFiles": "Open in files",
+    "rescan": "Rescan now",
+    "loading": "Loading…",
+    "total": "Total size",
+    "files": "Files",
+    "items": "Items here",
+    "indexed": "Indexed",
+    "rebuilding": "Updating the index",
+    "empty": "This folder is empty.",
+    "fileCount": "{count} files",
+    "showAll": "Show all {count} items",
+    "notIndexed": "This folder isn't in the index yet. It will appear after the next scan.",
+    "state": {
+      "building": {
+        "title": "Building the file index",
+        "body": "Stowr is scanning your files for the first time. On large shares this can take a few minutes; this page updates by itself."
+      },
+      "too_large": {
+        "title": "Too many files to index",
+        "body": "This server has more files than the index allows, so storage insights are unavailable. Search still works by scanning the disk."
+      },
+      "disabled": {
+        "title": "The file index is turned off",
+        "body": "Set STOWR_INDEX_INTERVAL (for example \"1h\") to enable storage insights and fast search."
+      }
+    }
   }
 }
