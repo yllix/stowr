@@ -1,0 +1,580 @@
+/*
+ * Stowr theme
+ *
+ * Loaded last, so it refines the inherited File Browser styles without
+ * rewriting them. Colours come from the logo's teal; neutrals are a cool
+ * slate. Most components read the variables below, so the palette can be
+ * adjusted here in one place.
+ */
+
+:root {
+  /* Brand (teal) */
+  --brand-50: #f0fdfa;
+  --brand-100: #ccfbf1;
+  --brand-200: #99f6e4;
+  --brand-400: #2dd4bf;
+  --brand-500: #14b8a6;
+  --brand-600: #0d9488;
+  --brand-700: #0f766e;
+  --brand-800: #115e59;
+
+  --accent: var(--brand-600);
+  --accent-strong: var(--brand-700);
+  --accent-soft: var(--brand-50);
+  --accent-ring: rgba(13, 148, 136, 0.25);
+
+  /* The inherited styles use --blue as "primary". */
+  --blue: var(--accent);
+  --dark-blue: var(--accent-strong);
+  --red: #ef4444;
+  --dark-red: #dc2626;
+
+  --icon-blue: var(--brand-500);
+  --iconPrimary: var(--brand-500);
+
+  --action: #475569;
+  --background: #f6f8fa;
+  --surfacePrimary: #ffffff;
+  --surfaceSecondary: #f1f5f9;
+  --textPrimary: #64748b;
+  --textSecondary: #0f172a;
+  --divider: #e9eef4;
+  --hover: rgba(15, 23, 42, 0.05);
+  --borderPrimary: #e2e8f0;
+  --borderSecondary: #cbd5e1;
+  --selected: var(--brand-50);
+  --selected-edge: var(--brand-500);
+
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow:
+    0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 24px -12px rgba(15, 23, 42, 0.18);
+  --shadow-lg:
+    0 2px 6px rgba(15, 23, 42, 0.06), 0 24px 48px -16px rgba(15, 23, 42, 0.28);
+
+  --font-sans:
+    "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+}
+
+:root.dark {
+  --accent: var(--brand-500);
+  --accent-strong: var(--brand-400);
+  --accent-soft: rgba(20, 184, 166, 0.14);
+  --accent-ring: rgba(45, 212, 191, 0.3);
+
+  --icon-blue: var(--brand-400);
+  --iconPrimary: var(--brand-400);
+
+  --action: #cbd5e1;
+  --background: #0b1016;
+  --surfacePrimary: #121922;
+  --surfaceSecondary: #1b2430;
+  --textPrimary: #8b9bb0;
+  --textSecondary: #e6edf5;
+  --divider: rgba(255, 255, 255, 0.06);
+  --hover: rgba(255, 255, 255, 0.06);
+  --borderPrimary: rgba(255, 255, 255, 0.08);
+  --borderSecondary: rgba(255, 255, 255, 0.16);
+  --selected: rgba(20, 184, 166, 0.14);
+  --selected-edge: var(--brand-400);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  --shadow-lg:
+    0 2px 6px rgba(0, 0, 0, 0.4), 0 24px 48px -16px rgba(0, 0, 0, 0.7);
+}
+
+/* Base ---------------------------------------------------------------- */
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.005em;
+}
+
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+}
+
+::selection {
+  background: var(--brand-200);
+  color: #042f2e;
+}
+
+.link,
+a.link {
+  color: var(--accent);
+}
+
+/* Thin, unobtrusive scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--borderSecondary) transparent;
+}
+
+/* Header -------------------------------------------------------------- */
+
+header {
+  background: color-mix(in srgb, var(--surfacePrimary) 85%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--divider);
+  box-shadow: none;
+}
+
+header img {
+  border-radius: 9px;
+}
+
+#search #input {
+  background: var(--surfaceSecondary);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  transition:
+    0.15s ease border-color,
+    0.15s ease box-shadow,
+    0.15s ease background;
+}
+
+#search #input:hover {
+  border-color: var(--borderPrimary);
+}
+
+#search #input:focus-within {
+  background: var(--surfacePrimary);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+#search #input input::placeholder {
+  color: var(--textPrimary);
+}
+
+/* Round icon buttons in the toolbar */
+.action {
+  color: var(--action);
+}
+
+.action:hover {
+  background-color: var(--hover);
+}
+
+header .action i {
+  font-size: 1.4em;
+}
+
+/* Sidebar ------------------------------------------------------------- */
+
+nav {
+  padding: 0.75em 0.75em 1em;
+}
+
+nav > div {
+  border-top: 0;
+  margin-top: 0.5em;
+  padding-top: 0.5em;
+  position: relative;
+}
+
+nav > div::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0.5em;
+  right: 0.5em;
+  border-top: 1px solid var(--divider);
+}
+
+nav .action {
+  border-radius: var(--radius);
+  font-size: 0.98em;
+  padding: 0.6em 0.75em;
+  margin: 1px 0;
+  color: var(--textSecondary);
+  font-weight: 500;
+}
+
+nav .action i {
+  color: var(--textPrimary);
+  padding: 0 0.6em 0 0;
+  font-size: 1.35em;
+  transition: 0.15s ease color;
+}
+
+nav .action:hover {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+nav .action:hover i {
+  color: var(--accent);
+  background: none;
+}
+
+/* Breadcrumbs --------------------------------------------------------- */
+
+.breadcrumbs {
+  border-bottom: 0;
+  background: color-mix(in srgb, var(--background) 92%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-weight: 500;
+}
+
+.breadcrumbs a {
+  border-radius: var(--radius-sm);
+  padding: 0.2em 0.45em;
+}
+
+.breadcrumbs a:hover {
+  background-color: var(--hover);
+  color: var(--textSecondary);
+}
+
+/* File listing -------------------------------------------------------- */
+
+#listing .item {
+  color: var(--textSecondary);
+}
+
+#listing .item .name {
+  font-weight: 500;
+}
+
+#listing .item .size,
+#listing .item .modified {
+  color: var(--textPrimary);
+  font-size: 0.875em;
+  font-variant-numeric: tabular-nums;
+}
+
+#listing h2 {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.72em;
+  font-weight: 600;
+  color: var(--textPrimary);
+}
+
+/* List view: one rounded card with hairline separators */
+#listing.list {
+  background: var(--surfacePrimary);
+  border: 1px solid var(--borderPrimary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: clip;
+  margin-top: 0.25em;
+}
+
+#listing.list .item {
+  border: 0;
+  border-bottom: 1px solid var(--divider);
+  padding: 0.7em 1em;
+  background: transparent;
+}
+
+#listing.list .item:not(.header):hover {
+  background: var(--hover);
+}
+
+#listing.list .item.header {
+  background: var(--surfacePrimary);
+  border-bottom: 1px solid var(--borderPrimary);
+  padding: 0.8em 1em;
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+#listing.list .item.header,
+#listing.list .item.header a {
+  color: var(--textPrimary);
+}
+
+#listing.list .item.header .name {
+  font-weight: 600;
+}
+
+#listing.list .item.header i {
+  font-size: 1.3em;
+}
+
+#listing.list .item div:first-of-type i {
+  font-size: 1.75em;
+}
+
+/* Grid views */
+#listing.mosaic .item {
+  border: 1px solid var(--borderPrimary);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+#listing.mosaic .item:hover {
+  box-shadow: var(--shadow);
+  border-color: var(--borderSecondary);
+}
+
+/* Selection: a soft tint with an accent edge instead of a solid fill */
+#listing .item[aria-selected="true"] {
+  background: var(--selected) !important;
+  color: var(--textSecondary) !important;
+  box-shadow: inset 3px 0 0 var(--selected-edge);
+}
+
+#listing.mosaic .item[aria-selected="true"] {
+  border-color: var(--selected-edge);
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+
+.file-icons [aria-selected="true"] i {
+  color: var(--accent);
+}
+
+.file-icons [data-dir="true"] i {
+  color: var(--iconPrimary);
+}
+
+/* Plain files get a quiet grey; typed files keep their colours from
+   listing-icons.css, whose selectors are more specific. */
+.file-icons i {
+  color: var(--textPrimary);
+}
+
+/* Cards and dialogs --------------------------------------------------- */
+
+.card {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--borderPrimary);
+  box-shadow: var(--shadow);
+}
+
+.card.floating {
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+}
+
+.card .card-title h2 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.overlay {
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* Buttons ------------------------------------------------------------- */
+
+.button {
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-sm);
+  font-weight: 500;
+  padding: 0.55em 1.1em;
+  transition:
+    0.15s ease background,
+    0.15s ease box-shadow,
+    0.15s ease transform;
+}
+
+.button:hover {
+  background-color: var(--accent-strong);
+}
+
+.button:active {
+  transform: translateY(1px);
+}
+
+.button:focus-visible {
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.button--red:hover {
+  background-color: var(--dark-red);
+}
+
+.button--flat {
+  color: var(--accent-strong);
+  text-transform: none;
+  box-shadow: none;
+}
+
+.button--flat:hover {
+  background: var(--accent-soft);
+}
+
+.button--flat.button--grey {
+  color: var(--textPrimary);
+}
+
+.button--flat.button--grey:hover {
+  background: var(--hover);
+}
+
+.button--flat.button--red:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Inputs -------------------------------------------------------------- */
+
+.input,
+select.input {
+  border-radius: var(--radius-sm);
+  border-color: var(--borderPrimary);
+  padding: 0.6em 0.85em;
+  transition:
+    0.15s ease border-color,
+    0.15s ease box-shadow;
+}
+
+.input:hover {
+  border-color: var(--borderSecondary);
+}
+
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+/* Login --------------------------------------------------------------- */
+
+#login {
+  background:
+    radial-gradient(
+      1200px 600px at 10% -10%,
+      color-mix(in srgb, var(--brand-200) 45%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 110% 110%,
+      color-mix(in srgb, var(--brand-100) 60%, transparent),
+      transparent 60%
+    ),
+    var(--background);
+}
+
+:root.dark #login {
+  background:
+    radial-gradient(
+      1200px 600px at 10% -10%,
+      rgba(20, 184, 166, 0.18),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 110% 110%,
+      rgba(13, 148, 136, 0.14),
+      transparent 60%
+    ),
+    var(--background);
+}
+
+#login form {
+  max-width: 22em;
+  background: var(--surfacePrimary);
+  border: 1px solid var(--borderPrimary);
+  border-radius: 18px;
+  box-shadow: var(--shadow-lg);
+  padding: 2.25em 2em 2em;
+}
+
+#login img {
+  width: 3.5em;
+  height: 3.5em;
+  border-radius: 14px;
+  box-shadow: 0 8px 20px -8px rgba(13, 148, 136, 0.6);
+}
+
+#login h1 {
+  font-size: 1.75em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0.5em 0 1em;
+  color: var(--textSecondary);
+}
+
+#login .input {
+  margin-bottom: 0.75em;
+  padding: 0.75em 0.9em;
+}
+
+#login .button {
+  padding: 0.75em 1em;
+  margin-top: 0.25em;
+}
+
+#login .wrong,
+#login .logout-message {
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.75em;
+}
+
+/* Upload and background-task panels ----------------------------------- */
+
+.upload-files .card.floating {
+  right: 1em;
+  bottom: 1em;
+  max-width: 24em;
+}
+
+.upload-files .file .file-progress {
+  background: var(--surfaceSecondary);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.upload-files .file .file-progress div {
+  background: linear-gradient(90deg, var(--brand-500), var(--brand-400));
+}
+
+/* Toasts -------------------------------------------------------------- */
+
+.Vue-Toastification__toast {
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  font-family: var(--font-sans);
+}
+
+/* Folder picker in the copy/move dialogs */
+.file-list li {
+  border-radius: var(--radius-sm);
+  padding: 0.35em 0.5em;
+}
+
+.file-list li:before {
+  color: var(--iconPrimary);
+}
+
+.file-list li:hover {
+  background: var(--hover);
+}
+
+.file-list li[aria-selected="true"] {
+  background: var(--selected) !important;
+  color: var(--textSecondary) !important;
+  box-shadow: inset 3px 0 0 var(--selected-edge);
+}
+
+.file-list li[aria-selected="true"]:before {
+  color: var(--accent);
+}
+
+/* Phones: panels span the width instead of hanging off the left edge */
+@media (max-width: 736px) {
+  .upload-files .card.floating {
+    left: 0.5em;
+    right: 0.5em;
+    bottom: 0.5em;
+    width: auto;
+    max-width: none;
+  }
+}
