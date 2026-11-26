@@ -28,6 +28,7 @@ func NewHandler(
 ) (http.Handler, error) {
 	server.Clean()
 	server.CaseInsensitiveFs = files.CaseInsensitive(afero.NewOsFs(), server.Root)
+	startFileIndex(server.Root)
 
 	r := mux.NewRouter()
 	r.Use(func(next http.Handler) http.Handler {
@@ -62,17 +63,21 @@ func NewHandler(
 
 	api.PathPrefix("/resources/recursive").Handler(monkey(resourceGetRecursiveHandler, "/api/resources/recursive")).Methods("GET")
 	api.PathPrefix("/resources").Handler(monkey(resourceGetHandler, "/api/resources")).Methods("GET")
-	api.PathPrefix("/resources").Handler(monkey(resourceDeleteHandler(fileCache), "/api/resources")).Methods("DELETE")
-	api.PathPrefix("/resources").Handler(monkey(resourcePostHandler(fileCache), "/api/resources")).Methods("POST")
-	api.PathPrefix("/resources").Handler(monkey(resourcePutHandler, "/api/resources")).Methods("PUT")
-	api.PathPrefix("/resources").Handler(monkey(resourcePatchHandler(fileCache), "/api/resources")).Methods("PATCH")
+	api.PathPrefix("/resources").Handler(refreshIndexAfter(monkey(resourceDeleteHandler(fileCache), "/api/resources"))).Methods("DELETE")
+	api.PathPrefix("/resources").Handler(refreshIndexAfter(monkey(resourcePostHandler(fileCache), "/api/resources"))).Methods("POST")
+	api.PathPrefix("/resources").Handler(refreshIndexAfter(monkey(resourcePutHandler, "/api/resources"))).Methods("PUT")
+	api.PathPrefix("/resources").Handler(refreshIndexAfter(monkey(resourcePatchHandler(fileCache), "/api/resources"))).Methods("PATCH")
 
 	api.PathPrefix("/tus").Handler(monkey(tusPostHandler(uploadCache), "/api/tus")).Methods("POST")
 	api.PathPrefix("/tus").Handler(monkey(tusHeadHandler(uploadCache), "/api/tus")).Methods("HEAD", "GET")
-	api.PathPrefix("/tus").Handler(monkey(tusPatchHandler(uploadCache), "/api/tus")).Methods("PATCH")
-	api.PathPrefix("/tus").Handler(monkey(tusDeleteHandler(uploadCache), "/api/tus")).Methods("DELETE")
+	api.PathPrefix("/tus").Handler(refreshIndexAfter(monkey(tusPatchHandler(uploadCache), "/api/tus"))).Methods("PATCH")
+	api.PathPrefix("/tus").Handler(refreshIndexAfter(monkey(tusDeleteHandler(uploadCache), "/api/tus"))).Methods("DELETE")
 
 	api.PathPrefix("/usage").Handler(monkey(diskUsage, "/api/usage")).Methods("GET")
+
+	api.Handle("/index", monkey(indexStatusHandler, "")).Methods("GET")
+	api.Handle("/index/refresh", monkey(indexRefreshHandler, "")).Methods("POST")
+	api.PathPrefix("/insights").Handler(monkey(insightsHandler, "/api/insights")).Methods("GET")
 
 	api.Handle("/jobs", monkey(jobsListHandler, "")).Methods("GET")
 	api.Handle("/jobs/{id:[a-f0-9]+}", monkey(jobGetHandler, "")).Methods("GET")

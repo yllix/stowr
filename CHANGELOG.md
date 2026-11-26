@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## Unreleased
+
+### Features
+
+* file index: Stowr keeps an in-memory index of file names, sizes and dates, rebuilt hourly and shortly after changes made through Stowr. Set `STOWR_INDEX_INTERVAL` to change the interval, or to `0` to turn it off
+* storage view: a new **Storage** page shows what is using space, folder by folder, with sizes, file counts and share of the total
+* fast search: search answers from the index instead of walking the disk, falling back to the disk walk when the index isn't ready
+
+### Changes
+
+* settings: remove the leftover "File Browser is being archived" notice
+
 ## [3.0.0](https://github.com/yllix/stowr/releases/tag/v3.0.0) (2026-11-26)
 
 The first Stowr release. Stowr is a maintained continuation of File Browser, forked from v2.63.23, and a drop-in replacement: it reads existing File Browser databases and configuration. Entries below this section are File Browser's history.

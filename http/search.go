@@ -6,9 +6,11 @@ import (
 	"errors"
 	"net/http"
 	"os"
+	"path"
 	"sync"
 	"time"
 
+	"github.com/yllix/stowr/v3/index"
 	"github.com/yllix/stowr/v3/search"
 )
 
@@ -58,16 +60,30 @@ var searchHandler = withUser(func(w http.ResponseWriter, r *http.Request, d *dat
 	}()
 	query := r.URL.Query().Get("query")
 
-	err := search.Search(ctx, d.user.Fs, r.URL.Path, query, d, func(path string, f os.FileInfo) error {
+	// Answer from the file index when it covers this folder; otherwise walk
+	// the disk as before.
+	used, err := searchIndex(ctx, d, r.URL.Path, query, func(p string, dir bool) error {
 		select {
 		case <-ctx.Done():
 		case response <- map[string]interface{}{
-			"dir":  f.IsDir(),
-			"path": path,
+			"dir":  dir,
+			"path": p,
 		}:
 		}
 		return context.Cause(ctx)
 	})
+	if !used {
+		err = search.Search(ctx, d.user.Fs, r.URL.Path, query, d, func(p string, f os.FileInfo) error {
+			select {
+			case <-ctx.Done():
+			case response <- map[string]interface{}{
+				"dir":  f.IsDir(),
+				"path": p,
+			}:
+			}
+			return context.Cause(ctx)
+		})
+	}
 	close(response)
 	wg.Wait()
 	if err == nil {
@@ -80,3 +96,47 @@ var searchHandler = withUser(func(w http.ResponseWriter, r *http.Request, d *dat
 
 	return 0, nil
 })
+
+// searchIndexLimit caps index search results; the disk walk had no cap but
+// streamed slowly enough that this was never reached in practice.
+const searchIndexLimit = 5000
+
+// searchIndex runs a search against the file index. used is false when the
+// index cannot answer (disabled, still building, or the folder is newer than
+// the last build), in which case the caller walks the disk instead.
+func searchIndex(ctx context.Context, d *data, scope, query string, found func(p string, dir bool) error) (used bool, err error) {
+	ix := currentIndex()
+	if ix == nil || ix.Status().State != index.StateReady {
+		return false, nil
+	}
+
+	scope = path.Join("/", scope)
+	abs, ok := indexPath(d, scope)
+	if !ok {
+		return false, nil
+	}
+
+	match := search.Matcher(query)
+	items, err := ix.Search(ctx, abs,
+		func(rel, _ string) bool { return match(path.Join(scope, rel)) },
+		func(rel string) bool { return d.Check(path.Join(scope, rel)) },
+		searchIndexLimit)
+	if errors.Is(err, index.ErrNotReady) {
+		return false, nil
+	}
+	if err != nil {
+		return true, err
+	}
+
+	for _, it := range items {
+		// The index can be up to a rebuild interval old: skip hits that
+		// have since been deleted.
+		if _, statErr := d.user.Fs.Stat(path.Join(scope, it.Path)); statErr != nil {
+			continue
+		}
+		if err := found(it.Path, it.IsDir); err != nil {
+			return true, err
+		}
+	}
+	return true, nil
+}

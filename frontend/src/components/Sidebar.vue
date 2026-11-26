@@ -15,6 +15,15 @@
         <i class="material-icons">folder</i>
         <span>{{ $t("sidebar.myFiles") }}</span>
       </button>
+      <button
+        class="action"
+        @click="toStorage"
+        :aria-label="$t('sidebar.storage')"
+        :title="$t('sidebar.storage')"
+      >
+        <i class="material-icons">donut_large</i>
+        <span>{{ $t("sidebar.storage") }}</span>
+      </button>
 
       <div v-if="user.perm.create">
         <button
@@ -190,6 +199,10 @@ export default {
     },
     toRoot() {
       this.$router.push({ path: "/files" });
+      this.closeHovers();
+    },
+    toStorage() {
+      this.$router.push({ path: "/storage/" });
       this.closeHovers();
     },
     toAccountSettings() {

@@ -88,6 +88,7 @@ func submitPatchJob(w http.ResponseWriter, action, src, dst string, override boo
 			}
 			return publicJobError(err)
 		}
+		refreshIndex()
 		return nil
 	})
 	if errors.Is(err, jobs.ErrQueueFull) {
