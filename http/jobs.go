@@ -76,6 +76,16 @@ func submitPatchJob(w http.ResponseWriter, action, src, dst string, override boo
 
 		if err != nil {
 			log.Printf("job %s %s -> %s failed: %v", action, src, dst, err)
+			// A failed copy leaves a partial tree behind; remove it so the
+			// user is not left with an incomplete copy that looks complete.
+			// Never for moves: a move's cross-volume fallback may already
+			// have deleted part of the source, so the destination may hold
+			// the only copy of those files.
+			if action == "copy" && !override {
+				if rmErr := d.user.Fs.RemoveAll(dst); rmErr != nil {
+					log.Printf("job %s: cleanup of %s after failure failed: %v", action, dst, rmErr)
+				}
+			}
 			return publicJobError(err)
 		}
 		return nil

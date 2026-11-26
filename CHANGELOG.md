@@ -11,6 +11,12 @@ Stowr is forked from File Browser v2.63.23. Entries below this section are File 
 * background tasks: copy and move run as server-side jobs with live progress (bytes and files), so large operations no longer depend on one long HTTP request. A task panel shows running jobs and lets you cancel them; cancelling a copy removes the partial copy. New API: `GET /api/jobs`, `GET /api/jobs/{id}`, `DELETE /api/jobs/{id}`, and `async=true` on the copy/move `PATCH` request
 * copies use a 256 KiB buffer instead of 32 KiB, which is faster on spinning disks and network storage
 
+### Bug Fixes
+
+* copy: no longer fails on datasets that refuse chmod, such as TrueNAS SMB shares (ZFS NFSv4 ACLs with `aclmode=restricted`). Every file copied, then the copy failed setting its mode; the inherited ACL now decides the permissions
+* jobs: a failed copy removes its partial copy, as a cancelled one already did (moves never delete anything)
+* copying or moving a folder into itself now says so, instead of "source is parent"
+
 ### Changes
 
 * rename the project to Stowr: Go module `github.com/yllix/stowr/v3`, binary `stowr`, images `ghcr.io/yllix/stowr`

@@ -20,7 +20,7 @@ var (
 	ErrInvalidAuthMethod        = errors.New("invalid auth method")
 	ErrPermissionDenied         = errors.New("permission denied")
 	ErrInvalidRequestParams     = errors.New("invalid request params")
-	ErrSourceIsParent           = errors.New("source is parent")
+	ErrSourceIsParent           = errors.New("cannot copy or move a folder into itself")
 	ErrRootUserDeletion         = errors.New("the sole admin can't be deleted")
 	ErrCurrentPasswordIncorrect = errors.New("the current password is incorrect")
 	ErrShareRequiresDownload    = errors.New("permission to share requires permission to download")

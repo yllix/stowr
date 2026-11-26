@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io/fs"
+	"os"
 	"sync"
 	"testing"
 
@@ -164,5 +166,42 @@ func TestMoveFileContextRenameIsInstant(t *testing.T) {
 	}
 	if rec.bytes != 0 {
 		t.Fatalf("rename should not copy data, reported %d bytes", rec.bytes)
+	}
+}
+
+// noChmodFs refuses every chmod, like a ZFS dataset with NFSv4 ACLs and
+// aclmode=restricted (the TrueNAS default for SMB shares).
+type noChmodFs struct {
+	afero.Fs
+	err error
+}
+
+func (f noChmodFs) Chmod(name string, _ fs.FileMode) error {
+	return &os.PathError{Op: "chmod", Path: name, Err: f.err}
+}
+
+func TestCopySucceedsWhenChmodIsNotAllowed(t *testing.T) {
+	for _, denied := range []error{fs.ErrPermission, errors.ErrUnsupported} {
+		afs := noChmodFs{Fs: newTree(t), err: denied}
+		rec := &recorder{}
+
+		if err := CopyContext(context.Background(), afs, "/src", "/dst", 0o644, 0o755, rec); err != nil {
+			t.Fatalf("chmod %v: CopyContext: %v", denied, err)
+		}
+		if rec.files != 3 {
+			t.Fatalf("chmod %v: %d files done, want 3", denied, rec.files)
+		}
+		got, err := afero.ReadFile(afs, "/dst/sub/b.bin")
+		if err != nil || len(got) != 2500 {
+			t.Fatalf("chmod %v: copied file len=%d err=%v", denied, len(got), err)
+		}
+	}
+}
+
+func TestCopyStillFailsOnOtherChmodErrors(t *testing.T) {
+	afs := noChmodFs{Fs: newTree(t), err: errors.New("disk on fire")}
+
+	if err := CopyFile(afs, "/src/a.bin", "/dst/a.bin", 0o644, 0o755); err == nil {
+		t.Fatal("unexpected chmod error was swallowed")
 	}
 }
