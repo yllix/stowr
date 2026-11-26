@@ -8,6 +8,7 @@ Stowr is forked from File Browser v2.63.23. Entries below this section are File 
 
 ### Features
 
+* new look: a Stowr theme built on the logo's teal, with a slate neutral palette, a system font stack, rounded cards and dialogs, a single-card file list with hairline rows, a soft selection highlight instead of a solid fill, pill-shaped sidebar items, a redesigned login page and a matching dark theme
 * background tasks: copy and move run as server-side jobs with live progress (bytes and files), so large operations no longer depend on one long HTTP request. A task panel shows running jobs and lets you cancel them; cancelling a copy removes the partial copy. New API: `GET /api/jobs`, `GET /api/jobs/{id}`, `DELETE /api/jobs/{id}`, and `async=true` on the copy/move `PATCH` request
 * copies use a 256 KiB buffer instead of 32 KiB, which is faster on spinning disks and network storage
 
