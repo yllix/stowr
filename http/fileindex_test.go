@@ -36,7 +36,7 @@ func useIndex(t *testing.T, root string) *index.Index {
 	return ix
 }
 
-func writeFile(t *testing.T, root, rel string, size int) {
+func writeTestFile(t *testing.T, root, rel string, size int) {
 	t.Helper()
 	p := filepath.Join(root, filepath.FromSlash(rel))
 	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
@@ -49,9 +49,9 @@ func writeFile(t *testing.T, root, rel string, size int) {
 
 func TestInsightsReportsFolderSizes(t *testing.T) {
 	root := t.TempDir()
-	writeFile(t, root, "media/movie.mkv", 3000)
-	writeFile(t, root, "media/song.mp3", 500)
-	writeFile(t, root, "docs/a.txt", 20)
+	writeTestFile(t, root, "media/movie.mkv", 3000)
+	writeTestFile(t, root, "media/song.mp3", 500)
+	writeTestFile(t, root, "docs/a.txt", 20)
 	useIndex(t, root)
 
 	key := []byte("test-signing-key")
@@ -101,8 +101,8 @@ func TestInsightsReportsFolderSizes(t *testing.T) {
 func TestInsightsCannotLeaveScope(t *testing.T) {
 	root := t.TempDir()
 	scope := filepath.Join(root, "user")
-	writeFile(t, root, "other/secret.bin", 999)
-	writeFile(t, scope, "mine.txt", 1)
+	writeTestFile(t, root, "other/secret.bin", 999)
+	writeTestFile(t, scope, "mine.txt", 1)
 	useIndex(t, root)
 
 	key := []byte("test-signing-key")
@@ -149,13 +149,13 @@ func searchPaths(t *testing.T, handler http.Handler, token, query string) []stri
 
 func TestSearchUsesIndexAndSkipsDeletedFiles(t *testing.T) {
 	root := t.TempDir()
-	writeFile(t, root, "a/report-2024.pdf", 10)
-	writeFile(t, root, "b/report-2025.pdf", 10)
-	writeFile(t, root, "b/notes.txt", 10)
+	writeTestFile(t, root, "a/report-2024.pdf", 10)
+	writeTestFile(t, root, "b/report-2025.pdf", 10)
+	writeTestFile(t, root, "b/notes.txt", 10)
 	useIndex(t, root)
 
 	// Changes after the index was built.
-	writeFile(t, root, "c/report-late.pdf", 10)
+	writeTestFile(t, root, "c/report-late.pdf", 10)
 	if err := os.Remove(filepath.Join(root, "a", "report-2024.pdf")); err != nil {
 		t.Fatal(err)
 	}
@@ -190,7 +190,7 @@ func TestSearchFallsBackToDiskWithoutIndex(t *testing.T) {
 	})
 
 	root := t.TempDir()
-	writeFile(t, root, "x/findme.txt", 1)
+	writeTestFile(t, root, "x/findme.txt", 1)
 
 	key := []byte("test-signing-key")
 	perm := users.Permissions{}
