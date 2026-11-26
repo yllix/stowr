@@ -12,33 +12,25 @@ builds:
       - -s -w -X github.com/yllix/stowr/v3/version.Version={{ .Version }} -X github.com/yllix/stowr/v3/version.CommitSHA={{ .ShortCommit }}
     main: main.go
     binary: stowr
+    # Kept to the platforms people actually run: x86-64 and ARM servers,
+    # NAS boxes and Raspberry Pis, plus Mac and Windows desktops.
     goos:
       - darwin
       - linux
       - windows
-      - freebsd
-      - openbsd
     goarch:
       - amd64
-      - "386"
-      - arm
       - arm64
-      - riscv64
+      - arm
     goarm:
-      - "5"
-      - "6"
       - "7"
     ignore:
       - goos: darwin
-        goarch: "386"
-      # Experimental, may not work properly
-      - goos: openbsd
-        goarch: riscv64
-      # Broken as of Go 1.24, deprecated as of Go 1.26
+        goarch: arm
       - goos: windows
         goarch: arm
-      - goos: freebsd
-        goarch: arm
+      - goos: windows
+        goarch: arm64
 
 archives:
   - name_template: "{{.Os}}-{{.Arch}}{{if .Arm}}v{{.Arm}}{{end}}-{{ .ProjectName }}"
@@ -48,7 +40,6 @@ archives:
         formats: ["zip"]
 
 dockers:
-  # Alpine docker images
   - dockerfile: Dockerfile
     use: buildx
     build_flag_templates:
@@ -92,24 +83,6 @@ dockers:
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/arm/v6"
-    goos: linux
-    goarch: arm
-    goarm: "6"
-    image_templates:
-      - "ghcr.io/yllix/stowr:{{ .Tag }}-armv6"
-      - "ghcr.io/yllix/stowr:v{{ .Major }}-armv6"
-    extra_files:
-      - docker
-  - dockerfile: Dockerfile
-    use: buildx
-    build_flag_templates:
-      - "--pull"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.name={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
       - "--platform=linux/arm/v7"
     goos: linux
     goarch: arm
@@ -117,42 +90,6 @@ dockers:
     image_templates:
       - "ghcr.io/yllix/stowr:{{ .Tag }}-armv7"
       - "ghcr.io/yllix/stowr:v{{ .Major }}-armv7"
-    extra_files:
-      - docker
-
-  ## s6-overlay docker images
-  - dockerfile: Dockerfile.s6
-    use: buildx
-    build_flag_templates:
-      - "--pull"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.name={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/amd64"
-    goos: linux
-    goarch: amd64
-    image_templates:
-      - "ghcr.io/yllix/stowr:{{ .Tag }}-amd64-s6"
-      - "ghcr.io/yllix/stowr:v{{ .Major }}-amd64-s6"
-    extra_files:
-      - docker
-  - dockerfile: Dockerfile.s6
-    use: buildx
-    build_flag_templates:
-      - "--pull"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.name={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/arm64"
-    goos: linux
-    goarch: arm64
-    image_templates:
-      - "ghcr.io/yllix/stowr:{{ .Tag }}-arm64-s6"
-      - "ghcr.io/yllix/stowr:v{{ .Major }}-arm64-s6"
     extra_files:
       - docker
 
@@ -176,23 +113,6 @@ docker_manifests:
       - "ghcr.io/yllix/stowr:v{{ .Major }}-amd64"
       - "ghcr.io/yllix/stowr:v{{ .Major }}-arm64"
       - "ghcr.io/yllix/stowr:v{{ .Major }}-armv7"
-  ## s6 image manifests
-  - name_template: "ghcr.io/yllix/stowr:s6"
-    # Release candidates must not move the floating tags.
-    skip_push: auto
-    image_templates:
-      - "ghcr.io/yllix/stowr:{{ .Tag }}-amd64-s6"
-      - "ghcr.io/yllix/stowr:{{ .Tag }}-arm64-s6"
-  - name_template: "ghcr.io/yllix/stowr:{{ .Tag }}-s6"
-    image_templates:
-      - "ghcr.io/yllix/stowr:{{ .Tag }}-amd64-s6"
-      - "ghcr.io/yllix/stowr:{{ .Tag }}-arm64-s6"
-  - name_template: "ghcr.io/yllix/stowr:v{{ .Major }}-s6"
-    # Release candidates must not move the floating tags.
-    skip_push: auto
-    image_templates:
-      - "ghcr.io/yllix/stowr:v{{ .Major }}-amd64-s6"
-      - "ghcr.io/yllix/stowr:v{{ .Major }}-arm64-s6"
 
 release:
   # Tags like v3.0.0-rc.1 are published as pre-releases.
