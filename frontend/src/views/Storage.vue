@@ -3,6 +3,11 @@
     <header-bar showMenu showLogo>
       <title />
       <action
+        icon="find_in_page"
+        :label="t('storage.findDuplicates')"
+        @action="findDuplicates"
+      />
+      <action
         icon="folder_open"
         :label="t('storage.openInFiles')"
         @action="openInFiles"
@@ -204,6 +209,10 @@ function open(item: UsageItem) {
       path: basePath().replace(/^\/storage/, "/files") + name,
     });
   }
+}
+
+function findDuplicates() {
+  router.push({ path: basePath().replace(/^\/storage/, "/duplicates") });
 }
 
 function openInFiles() {

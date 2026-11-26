@@ -4,6 +4,7 @@ import Login from "@/views/Login.vue";
 import Layout from "@/views/Layout.vue";
 import Files from "@/views/Files.vue";
 import Storage from "@/views/Storage.vue";
+import Duplicates from "@/views/Duplicates.vue";
 import Share from "@/views/Share.vue";
 import Users from "@/views/settings/Users.vue";
 import User from "@/views/settings/User.vue";
@@ -23,6 +24,7 @@ const titles = {
   Share: "buttons.share",
   Files: "files.files",
   Storage: "sidebar.storage",
+  Duplicates: "duplicates.title",
   Settings: "sidebar.settings",
   ProfileSettings: "settings.profileSettings",
   Shares: "settings.shareManagement",
@@ -76,6 +78,20 @@ const routes = [
         path: ":path*",
         name: "Storage",
         component: Storage,
+      },
+    ],
+  },
+  {
+    path: "/duplicates",
+    component: Layout,
+    meta: {
+      requiresAuth: true,
+    },
+    children: [
+      {
+        path: ":path*",
+        name: "Duplicates",
+        component: Duplicates,
       },
     ],
   },

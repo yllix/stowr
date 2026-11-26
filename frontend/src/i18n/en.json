@@ -319,7 +319,8 @@
     "cancel": "Cancel task",
     "confirmCancel": "Cancel this task? A partial copy will be removed.",
     "dismiss": "Dismiss",
-    "clearFinished": "Clear finished tasks"
+    "clearFinished": "Clear finished tasks",
+    "duplicates": "Finding duplicates in"
   },
   "storage": {
     "openInFiles": "Open in files",
@@ -347,6 +348,28 @@
         "title": "The file index is turned off",
         "body": "Set STOWR_INDEX_INTERVAL (for example \"1h\") to enable storage insights and fast search."
       }
-    }
+    },
+    "findDuplicates": "Find duplicates here"
+  },
+  "duplicates": {
+    "title": "Duplicates",
+    "intro": "Find files with identical content in this folder and everything below it. Files are compared by content, not name: same-size files are fingerprinted, and only matches are read in full.",
+    "minSize": "Ignore files smaller than",
+    "scan": "Find duplicates",
+    "rescan": "Scan again",
+    "scanning": "Scanning… progress is shown in the Background tasks panel.",
+    "needsIndex": "The file index isn't ready yet. Try again once the Storage page shows your folders.",
+    "none": "No duplicates found.",
+    "summary": "{groups} groups of identical files · {wasted} could be freed",
+    "truncated": "Showing the {count} groups that waste the most space.",
+    "copies": "{count} copies",
+    "wastedGroup": "{size} each · {wasted} reclaimable",
+    "keepOne": "Select all but the first",
+    "deleteSelected": "Delete selected",
+    "confirmDelete": "Delete {count} files? This cannot be undone.",
+    "keepAtLeastOne": "Keep at least one copy in each group.",
+    "deleted": "Deleted {count} files",
+    "open": "Open",
+    "lastScan": "Last scan {when}"
   }
 }

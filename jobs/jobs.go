@@ -62,6 +62,7 @@ type Job struct {
 	created    time.Time
 	started    time.Time
 	finished   time.Time
+	result     any
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -83,6 +84,9 @@ type Snapshot struct {
 	Created    time.Time  `json:"created"`
 	Started    *time.Time `json:"started,omitempty"`
 	Finished   *time.Time `json:"finished,omitempty"`
+	// Result is the job's output, if it produces one. List leaves it out
+	// so that polling stays cheap; Get includes it.
+	Result any `json:"result,omitempty"`
 }
 
 // SetTotals records the expected amount of work.
@@ -106,6 +110,13 @@ func (j *Job) FileDone() {
 	j.mu.Unlock()
 }
 
+// SetResult records the job's output, returned by Manager.Get.
+func (j *Job) SetResult(v any) {
+	j.mu.Lock()
+	j.result = v
+	j.mu.Unlock()
+}
+
 // Snapshot returns the current state of the job.
 func (j *Job) Snapshot() Snapshot {
 	j.mu.Lock()
@@ -123,6 +134,7 @@ func (j *Job) Snapshot() Snapshot {
 		TotalFiles: j.totalFiles,
 		DoneFiles:  j.doneFiles,
 		Created:    j.created,
+		Result:     j.result,
 	}
 	if !j.started.IsZero() {
 		t := j.started
@@ -226,7 +238,9 @@ func (m *Manager) List(userID uint) []Snapshot {
 
 	out := make([]Snapshot, 0, len(owned))
 	for _, j := range owned {
-		out = append(out, j.Snapshot())
+		s := j.Snapshot()
+		s.Result = nil
+		out = append(out, s)
 	}
 	sort.Slice(out, func(a, b int) bool { return out[a].Created.After(out[b].Created) })
 	return out
