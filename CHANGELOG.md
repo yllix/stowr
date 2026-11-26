@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file. See [commit
 
 ## Unreleased
 
+### Changes
+
+* release: build only the platforms people run (Linux amd64/arm64/armv7, macOS amd64/arm64, Windows amd64) and only the Alpine image. FreeBSD, OpenBSD, 32-bit x86, armv5/v6, riscv64 and the `s6` image variant are no longer published, which roughly halves release time
+
+## [3.1.0](https://github.com/yllix/stowr/releases/tag/v3.1.0) (2026-11-26)
+
 ### Features
 
 * file index: Stowr keeps an in-memory index of file names, sizes and dates, rebuilt hourly and shortly after changes made through Stowr. Set `STOWR_INDEX_INTERVAL` to change the interval, or to `0` to turn it off

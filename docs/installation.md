@@ -17,9 +17,7 @@ Stowr is now up and running. Read the ["First Boot"](#first-boot) section for mo
 
 ## Docker
 
-Stowr is available as two different Docker images, which can be found on [GitHub Container Registry](https://github.com/yllix/stowr/pkgs/container/stowr): a [bare Alpine image](#bare-alpine-image) and an [S6 Overlay image](#s6-overlay-image).
-
-### Bare Alpine Image
+Stowr's Docker image is published on [GitHub Container Registry](https://github.com/yllix/stowr/pkgs/container/stowr) for `linux/amd64`, `linux/arm64` and `linux/arm/v7`. It is a small Alpine image.
 
 ```sh
 docker run \
@@ -37,31 +35,6 @@ The default user that runs Stowr inside the container has UID 1000 and GID 1000.
 > [!NOTE]
 >
 > When using [bind mounts](https://docs.docker.com/engine/storage/bind-mounts/), that is, when you mount a path on the host in the container, you must manually ensure that they have the correct **permissions**. Docker does not do this automatically for you. The host directories must be readable and writable by the user running inside the container. You can use the [`chown`](https://linux.die.net/man/1/chown) command to change the owner of those paths.
-
-Stowr is now up and running. Read the ["First Boot"](#first-boot) section for more information.
-
-### S6 Overlay Image
-
-The `s6` image is based on LinuxServer and leverages the [s6-overlay](https://github.com/just-containers/s6-overlay) system for a standard, highly customizable image. It should be used as follows:
-
-```shell
-docker run \
-    -v /path/to/srv:/srv \
-    -v /path/to/database:/database \
-    -v /path/to/config:/config \
-    -e PUID=$(id -u) \
-    -e PGID=$(id -g) \
-    -p 8080:80 \
-    ghcr.io/yllix/stowr:s6
-```
-
-Where:
-
-- `/path/to/srv` contains the files root directory for Stowr
-- `/path/to/config` contains a `settings.json` file
-- `/path/to/database` contains a `filebrowser.db` file
-
-Both `settings.json` and `filebrowser.db` will automatically be initialized if they don't exist.
 
 Stowr is now up and running. Read the ["First Boot"](#first-boot) section for more information.
 
