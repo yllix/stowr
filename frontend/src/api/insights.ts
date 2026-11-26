@@ -39,3 +39,26 @@ export async function get(url: string): Promise<Insights> {
 export async function refresh(): Promise<void> {
   await fetchURL(`/api/index/refresh`, { method: "POST" });
 }
+
+export interface DuplicateGroup {
+  size: number;
+  hash: string;
+  paths: string[];
+}
+
+export interface DuplicatesResult {
+  path: string;
+  minSize: number;
+  groups: DuplicateGroup[];
+  wasted: number;
+  truncated?: boolean;
+}
+
+/** Start a duplicate scan of a folder; resolves with the queued job. */
+export async function findDuplicates(url: string, minSize: number) {
+  const res = await fetchURL(
+    `/api/duplicates${removePrefix(url)}?minSize=${minSize}`,
+    { method: "POST" }
+  );
+  return res.json();
+}

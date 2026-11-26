@@ -4,7 +4,7 @@ export type JobStatus = "queued" | "running" | "done" | "failed" | "canceled";
 
 export interface Job {
   id: string;
-  action: "copy" | "rename";
+  action: "copy" | "rename" | "duplicates";
   src: string;
   dst: string;
   status: JobStatus;
@@ -16,6 +16,7 @@ export interface Job {
   created: string;
   started?: string;
   finished?: string;
+  result?: unknown;
 }
 
 export function isTerminal(status: JobStatus): boolean {

@@ -78,6 +78,7 @@ func NewHandler(
 	api.Handle("/index", monkey(indexStatusHandler, "")).Methods("GET")
 	api.Handle("/index/refresh", monkey(indexRefreshHandler, "")).Methods("POST")
 	api.PathPrefix("/insights").Handler(monkey(insightsHandler, "/api/insights")).Methods("GET")
+	api.PathPrefix("/duplicates").Handler(monkey(duplicatesHandler, "/api/duplicates")).Methods("POST")
 
 	api.Handle("/jobs", monkey(jobsListHandler, "")).Methods("GET")
 	api.Handle("/jobs/{id:[a-f0-9]+}", monkey(jobGetHandler, "")).Methods("GET")

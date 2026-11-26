@@ -12,6 +12,16 @@ All notable changes to this project will be documented in this file. See [commit
 
 ### Features
 
+* duplicate finder: find files with identical content under a folder as a background job, then review the groups and delete extra copies. Same-size files come from the index; each is fingerprinted from its first and last 64 KiB, and only matches are hashed in full (SHA-256). New API: `POST /api/duplicates/<path>?minSize=<bytes>`; the result is on `GET /api/jobs/{id}`
+
+### Changes
+
+* release: build only the platforms people run (Linux amd64/arm64/armv7, macOS amd64/arm64, Windows amd64) and only the Alpine image. FreeBSD, OpenBSD, 32-bit x86, armv5/v6, riscv64 and the `s6` image variant are no longer published, which roughly halves release time
+
+## [3.1.0](https://github.com/yllix/stowr/releases/tag/v3.1.0) (2026-11-26)
+
+### Features
+
 * file index: Stowr keeps an in-memory index of file names, sizes and dates, rebuilt hourly and shortly after changes made through Stowr. Set `STOWR_INDEX_INTERVAL` to change the interval, or to `0` to turn it off
 * storage view: a new **Storage** page shows what is using space, folder by folder, with sizes, file counts and share of the total
 * fast search: search answers from the index instead of walking the disk, falling back to the disk walk when the index isn't ready
