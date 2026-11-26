@@ -168,3 +168,50 @@ func TestPublicJobErrorHidesServerPaths(t *testing.T) {
 		t.Fatalf("message = %q, want %q", msg, "not found")
 	}
 }
+
+func TestFailedAsyncCopyRemovesPartialCopy(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("root can read files without read permission")
+	}
+
+	userScope := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(userScope, "src"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(userScope, "src", "ok.txt"), []byte("fine"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	unreadable := filepath.Join(userScope, "src", "zz-unreadable.txt")
+	if err := os.WriteFile(unreadable, []byte("secret"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(unreadable, 0); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(unreadable, 0o644) })
+
+	key := []byte("test-signing-key")
+	perm := users.Permissions{Create: true, Rename: true, Modify: true}
+	st := scopedUserStorage(t, userScope, perm, key)
+	handler := handle(resourcePatchHandler(diskcache.NewNoOp()), "", st, &settings.Server{})
+
+	rec := asyncPatch(t, handler, signToken(t, perm, key), "/src", "copy", "/dst")
+	if rec.Code != http.StatusAccepted {
+		t.Fatalf("status = %d, want 202; body=%q", rec.Code, rec.Body.String())
+	}
+	var job jobs.Snapshot
+	if err := json.Unmarshal(rec.Body.Bytes(), &job); err != nil {
+		t.Fatal(err)
+	}
+
+	done := waitForJob(t, 1, job.ID)
+	if done.Status != jobs.StatusFailed {
+		t.Fatalf("job finished as %q, want failed", done.Status)
+	}
+	if _, err := os.Stat(filepath.Join(userScope, "dst")); !os.IsNotExist(err) {
+		t.Fatalf("partial copy left behind: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(userScope, "src", "ok.txt")); err != nil {
+		t.Fatalf("source damaged: %v", err)
+	}
+}

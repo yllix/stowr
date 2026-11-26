@@ -2,6 +2,7 @@ package fileutils
 
 import (
 	"context"
+	"errors"
 	"io"
 	"io/fs"
 	"os"
@@ -83,7 +84,7 @@ func copyFile(ctx context.Context, afs afero.Fs, source, dest string, fileMode, 
 		return err
 	}
 	err = afs.Chmod(dest, info.Mode())
-	if err != nil {
+	if err != nil && !chmodNotAllowed(err) {
 		return err
 	}
 
@@ -148,4 +149,13 @@ func CommonPrefix(sep byte, paths ...string) string {
 	}
 
 	return string(c)
+}
+
+// chmodNotAllowed reports whether a chmod failed because the filesystem does
+// not allow changing mode bits, rather than because something went wrong.
+// ZFS datasets with NFSv4 ACLs and aclmode=restricted (the TrueNAS default for
+// SMB shares) refuse every chmod with EPERM; there the inherited ACL decides
+// the new file's permissions, so the copy is still complete and correct.
+func chmodNotAllowed(err error) bool {
+	return errors.Is(err, fs.ErrPermission) || errors.Is(err, errors.ErrUnsupported)
 }
