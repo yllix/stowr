@@ -16,7 +16,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -46,20 +45,12 @@ var errTooLarge = errors.New("too many entries")
 
 type entry struct {
 	name   string
-	lower  string // lower-cased name; empty when equal to name
 	parent int32
 	end    int32 // last entry index of this subtree (== own index for files)
 	isDir  bool
 	size   int64 // file size, or the total of the subtree for folders
 	files  int64 // regular files in the subtree (1 for a file)
 	mtime  int64 // unix seconds
-}
-
-func (e *entry) lowerName() string {
-	if e.lower != "" {
-		return e.lower
-	}
-	return e.name
 }
 
 type snapshot struct {
@@ -89,9 +80,7 @@ type Index struct {
 	state    atomic.Value // State
 	building atomic.Bool
 
-	mu        sync.Mutex
-	requested bool
-	trigger   chan struct{}
+	trigger chan struct{}
 }
 
 // New creates an index of root. It does nothing until Start is called.
@@ -260,9 +249,6 @@ func walk(ctx context.Context, s *snapshot, dir string, id int32, maxEntries int
 
 		name := de.Name()
 		e := entry{name: name, parent: id, mtime: info.ModTime().Unix()}
-		if lower := strings.ToLower(name); lower != name {
-			e.lower = lower
-		}
 
 		child := int32(len(s.entries))
 		s.children[id] = append(s.children[id], child)

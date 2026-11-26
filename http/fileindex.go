@@ -12,6 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/spf13/afero"
+
 	"github.com/yllix/stowr/v3/files"
 	"github.com/yllix/stowr/v3/index"
 )
@@ -98,17 +100,15 @@ func (s *statusWriter) Flush() {
 func (s *statusWriter) Unwrap() http.ResponseWriter { return s.ResponseWriter }
 
 // indexPath maps a path in the user's file view to the absolute on-disk path
-// the index uses. RealPath also rejects paths that leave the user's scope.
+// the index uses. Joining onto "/" first removes any "..", so the result
+// cannot leave the user's scope; FullBaseFsPath resolves nested base paths
+// the same way user.FullPath does.
 func indexPath(d *data, p string) (string, bool) {
 	base := files.BasePath(d.user.Fs)
 	if base == nil {
 		return "", false
 	}
-	real, err := base.RealPath(path.Join("/", p))
-	if err != nil {
-		return "", false
-	}
-	return real, true
+	return afero.FullBaseFsPath(base, path.Join("/", p)), true
 }
 
 // indexAllowed returns a filter applying the user's rules and hidden-file
@@ -173,7 +173,7 @@ var indexStatusHandler = withUser(func(w http.ResponseWriter, r *http.Request, _
 })
 
 // indexRefreshHandler serves POST /api/index/refresh (admins only).
-var indexRefreshHandler = withAdmin(func(w http.ResponseWriter, r *http.Request, _ *data) (int, error) {
+var indexRefreshHandler = withAdmin(func(w http.ResponseWriter, _ *http.Request, _ *data) (int, error) {
 	refreshIndex()
 	w.WriteHeader(http.StatusAccepted)
 	return 0, nil
