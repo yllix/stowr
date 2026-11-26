@@ -2,9 +2,9 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
-## Unreleased (Stowr)
+## [3.0.0](https://github.com/yllix/stowr/releases/tag/v3.0.0) (2026-11-26)
 
-Stowr is forked from File Browser v2.63.23. Entries below this section are File Browser's history.
+The first Stowr release. Stowr is a maintained continuation of File Browser, forked from v2.63.23, and a drop-in replacement: it reads existing File Browser databases and configuration. Entries below this section are File Browser's history.
 
 ### Features
 
@@ -25,6 +25,8 @@ Stowr is forked from File Browser v2.63.23. Entries below this section are File 
 * new logo and branding
 * docker: copy the default `settings.json` without preserving permissions, and only when `/config` is writable, so locked-down volumes (e.g. TrueNAS) no longer print an error
 * ci: publish to GitHub Container Registry; add `govulncheck`, `pnpm audit` and Trivy scans; add Dependabot updates
+* deps: update Go and frontend dependencies to clear all high-severity advisories reported by govulncheck, pnpm audit and Trivy; container base images move to Alpine 3.24 and BusyBox 1.38
+* release: release candidates are published as GitHub pre-releases and no longer move the `latest`, `v3`, `s6` or `v3-s6` image tags
 * docs: point installation and links at the Stowr repository; add NOTICE and a new security policy
 
 ## [2.63.23](https://github.com/filebrowser/filebrowser/compare/v2.63.22...v2.63.23) (2026-07-27)
