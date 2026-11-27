@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -198,7 +199,11 @@ func tusResumeUpload(w http.ResponseWriter, r *http.Request, d *data, cache Uplo
 		return resumeConflict(w)
 	}
 
-	existing, err := d.user.Fs.Open(r.URL.Path)
+	// The path is already checked and the filesystem is scoped to the user;
+	// rooting and cleaning it here as well keeps it from climbing out with
+	// "..", whatever the caller did.
+	uploadPath := path.Clean("/" + r.URL.Path)
+	existing, err := d.user.Fs.Open(uploadPath)
 	if err != nil {
 		return errToStatus(err), err
 	}
@@ -212,7 +217,6 @@ func tusResumeUpload(w http.ResponseWriter, r *http.Request, d *data, cache Uplo
 		return resumeConflict(w)
 	}
 
-	uploadPath := r.URL.Path
 	cache.Register(file.RealPath(), uploadLength, func() error {
 		return d.user.Fs.Remove(uploadPath)
 	})
