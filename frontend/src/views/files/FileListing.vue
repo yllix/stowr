@@ -840,16 +840,7 @@ const drop = async (event: DragEvent) => {
       confirm: (event: Event, result: Array<ConflictingResource>) => {
         event.preventDefault();
         layoutStore.closeHovers();
-        for (let i = result.length - 1; i >= 0; i--) {
-          const item = result[i];
-          if (item.checked.length == 2) {
-            continue;
-          } else if (item.checked.length == 1 && item.checked[0] == "origin") {
-            files[item.index].overwrite = true;
-          } else {
-            files.splice(item.index, 1);
-          }
-        }
+        upload.applyConflictResolution(files, result);
         if (files.length > 0) {
           upload.handleFiles(files, path);
           fileStore.preselect = preselect;
@@ -901,16 +892,7 @@ const uploadInput = async (event: Event) => {
       confirm: (event: Event, result: Array<ConflictingResource>) => {
         event.preventDefault();
         layoutStore.closeHovers();
-        for (let i = result.length - 1; i >= 0; i--) {
-          const item = result[i];
-          if (item.checked.length == 2) {
-            continue;
-          } else if (item.checked.length == 1 && item.checked[0] == "origin") {
-            uploadFiles[item.index].overwrite = true;
-          } else {
-            uploadFiles.splice(item.index, 1);
-          }
-        }
+        upload.applyConflictResolution(uploadFiles, result);
         if (uploadFiles.length > 0) {
           upload.handleFiles(uploadFiles, path);
         }

@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file. See [commit
 
 ## Unreleased
 
+### Bug Fixes
+
+* uploads: "Resume interrupted uploads" now really resumes. Files that are smaller on the server continue from where they stopped instead of being uploaded again from zero. The browser sends the last 1 MiB already on the server and the server checks it byte for byte before appending; if it doesn't match, the file is uploaded from the start and the panel says so. This works after a server restart and from a different browser
+* uploads: an idle, unfinished upload is kept for 24 hours instead of 3 minutes before its partial file is deleted, so a sleeping laptop or dropped connection no longer throws away the progress. Set `STOWR_UPLOAD_EXPIRY` to change it
+* uploads: the upload panel shows what each file is doing (resuming, retrying after a lost connection, restarted) and keeps failed uploads listed with the reason until you clear them
+
+## [3.2.0](https://github.com/yllix/stowr/releases/tag/v3.2.0) (2026-11-26)
+
 ### Changes
 
 * release: build only the platforms people run (Linux amd64/arm64/armv7, macOS amd64/arm64, Windows amd64) and only the Alpine image. FreeBSD, OpenBSD, 32-bit x86, armv5/v6, riscv64 and the `s6` image variant are no longer published, which roughly halves release time

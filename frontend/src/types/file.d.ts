@@ -65,8 +65,10 @@ interface ConflictingResource {
   name: string;
   origin: ConflictingItem;
   dest: ConflictingItem;
-  checked: Array<"origin" | "dest", "origin-resume">;
+  checked: Array<"origin" | "dest">;
   isSmallerOnServer?: boolean;
+  // Continue the interrupted upload instead of replacing the server file.
+  resume?: boolean;
 }
 
 interface CsvData {

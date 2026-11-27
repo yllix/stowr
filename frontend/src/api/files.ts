@@ -4,6 +4,7 @@ import { useJobsStore } from "@/stores/jobs";
 import type { Job } from "./jobs";
 import { baseURL } from "@/utils/constants";
 import { upload as postTus, useTus } from "./tus";
+import type { UploadOptions } from "./tus";
 import { createURL, fetchURL, removePrefix, StatusError } from "./utils";
 import { isEncodableResponse, makeRawResource } from "@/utils/encodings";
 
@@ -109,7 +110,8 @@ export async function post(
   url: string,
   content: ApiContent = "",
   overwrite = false,
-  onupload: any = () => {}
+  onupload: any = () => {},
+  options: UploadOptions = {}
 ) {
   // Use the pre-existing API if:
   const useResourcesApi =
@@ -122,7 +124,7 @@ export async function post(
     !(await useTus(content));
   return useResourcesApi
     ? postResources(url, content, overwrite, onupload)
-    : postTus(url, content, overwrite, onupload);
+    : postTus(url, content, overwrite, onupload, options);
 }
 
 async function postResources(

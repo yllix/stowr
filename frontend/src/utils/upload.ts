@@ -148,6 +148,31 @@ export async function checkConflict(
   return conflicts;
 }
 
+/**
+ * Apply the user's choices from the conflict dialog to an upload list, in
+ * place: keep both (rename), replace, resume an interrupted upload, or skip.
+ */
+export function applyConflictResolution(
+  files: UploadList,
+  result: ConflictingResource[]
+) {
+  for (let i = result.length - 1; i >= 0; i--) {
+    const item = result[i];
+    if (item.checked.length == 2) {
+      continue;
+    } else if (item.checked.length == 1 && item.checked[0] == "origin") {
+      files[item.index].overwrite = true;
+      if (item.resume && item.isSmallerOnServer && item.dest.size) {
+        // Continue from the bytes already on the server. If they turn out
+        // not to match, the upload falls back to replacing the file.
+        files[item.index].resumeFrom = item.dest.size;
+      }
+    } else {
+      files.splice(item.index, 1);
+    }
+  }
+}
+
 export function scanFiles(dt: DataTransfer): Promise<UploadList | FileList> {
   return new Promise((resolve) => {
     let reading = 0;
@@ -272,7 +297,8 @@ export function handleFiles(
       file.name,
       file.file ?? null,
       file.overwrite || overwrite,
-      type
+      type,
+      file.resumeFrom
     );
   }
 }

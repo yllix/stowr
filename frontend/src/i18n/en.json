@@ -29,8 +29,8 @@
     "rename": "Rename",
     "replace": "Replace",
     "reportIssue": "Report Issue",
-    "resumeTransfer": "Resume previous transfer",
-    "resumeTransferTooltip": "Skip all conflicting files, except the ones that are smaller on the server as we suppose that their transfert has been interrupted.",
+    "resumeTransfer": "Resume interrupted uploads",
+    "resumeTransferTooltip": "Continue files that are smaller on the server, where an earlier upload stopped part-way, from where they stopped. Other conflicting files are skipped.",
     "save": "Save",
     "schedule": "Schedule",
     "search": "Search",
@@ -371,5 +371,14 @@
     "deleted": "Deleted {count} files",
     "open": "Open",
     "lastScan": "Last scan {when}"
+  },
+  "uploadStatus": {
+    "resuming": "Checking the partial file to resume from {size}…",
+    "resumed": "Resumed from {size}",
+    "restarted": "The file on the server didn't match, so it's being uploaded from the start",
+    "retrying": "Connection lost, retrying ({attempt} of {of})…",
+    "failed": "Failed: {message}",
+    "failedTitle": "Failed uploads ({count})",
+    "clearFailed": "Clear"
   }
 }

@@ -7,11 +7,60 @@ const RETRY_BASE_DELAY = 1000;
 const RETRY_MAX_DELAY = 20000;
 const CURRENT_UPLOAD_LIST: { [key: string]: tus.Upload } = {};
 
+// How much of the already-uploaded data is sent back to prove that a partial
+// file on the server is the start of this file. Must not exceed the server's
+// limit (resumeSampleMax).
+const RESUME_SAMPLE_BYTES = 1024 * 1024;
+
+export interface UploadOptions {
+  // Bytes already on the server from an interrupted upload of this file.
+  resumeFrom?: number;
+  // Reports what the upload is doing, for the upload panel.
+  onStatus?: (status: UploadStatus | undefined) => void;
+}
+
+/**
+ * Ask the server to continue an interrupted upload. Resolves with the upload
+ * URL to continue at, or null when the partial file on the server isn't the
+ * start of this file (it must then be uploaded from the beginning).
+ */
+async function resumeUpload(
+  resourceURL: string,
+  content: Blob,
+  resumeFrom: number
+): Promise<string | null> {
+  const authStore = useAuthStore();
+  const start = Math.max(0, resumeFrom - RESUME_SAMPLE_BYTES);
+  const sample = content.slice(start, resumeFrom);
+
+  const res = await fetch(`${resourceURL}&resume=true`, {
+    method: "POST",
+    headers: {
+      "X-Auth": authStore.jwt,
+      "Tus-Resumable": "1.0.0",
+      "Upload-Length": String(content.size),
+      "Stowr-Resume-Offset": String(resumeFrom),
+    },
+    body: sample,
+  });
+
+  if (res.status === 409) return null;
+  if (res.status !== 201) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`${res.status} ${text || res.statusText}`.trim());
+  }
+
+  const location = res.headers.get("Location");
+  if (!location) throw new Error("Resume failed: no upload location");
+  return `${origin}${location}`;
+}
+
 export async function upload(
   filePath: string,
   content: ApiContent = "",
   overwrite = false,
-  onupload: any
+  onupload: any,
+  options: UploadOptions = {}
 ) {
   if (!tusSettings) {
     // Shouldn't happen as we check for tus support before calling this function
@@ -19,25 +68,51 @@ export async function upload(
   }
 
   filePath = removePrefix(filePath);
-  const resourcePath = `${tusEndpoint}${filePath}?override=${overwrite}`;
-
   const authStore = useAuthStore();
 
   // Exit early because of typescript, tus content can't be a string
   if (content === "") {
     return false;
   }
+
+  const onStatus = options.onStatus ?? (() => {});
+  let uploadUrl: string | null = null;
+  let baseStatus: UploadStatus | undefined;
+
+  const resumeFrom = options.resumeFrom ?? 0;
+  if (resumeFrom > 0 && content instanceof Blob && resumeFrom < content.size) {
+    onStatus({ kind: "resuming", from: resumeFrom });
+    uploadUrl = await resumeUpload(
+      `${origin}${baseURL}${tusEndpoint}${filePath}?override=false`,
+      content,
+      resumeFrom
+    );
+    if (uploadUrl) {
+      baseStatus = { kind: "resumed", from: resumeFrom };
+    } else {
+      // The server copy is a different file: replace it.
+      baseStatus = { kind: "restarted" };
+      overwrite = true;
+    }
+    onStatus(baseStatus);
+  }
+
+  const resourcePath = `${tusEndpoint}${filePath}?override=${overwrite}`;
+  const retryDelays = computeRetryDelays(tusSettings);
+  let retrying = false;
+
   return new Promise<void | string>((resolve, reject) => {
     const upload = new tus.Upload(content, {
       endpoint: `${origin}${baseURL}${resourcePath}`,
-      chunkSize: tusSettings.chunkSize,
-      retryDelays: computeRetryDelays(tusSettings),
+      uploadUrl: uploadUrl ?? undefined,
+      chunkSize: tusSettings!.chunkSize,
+      retryDelays,
       parallelUploads: 1,
       storeFingerprintForResuming: false,
       headers: {
         "X-Auth": authStore.jwt,
       },
-      onShouldRetry: function (err) {
+      onShouldRetry: function (err, retryAttempt) {
         const status = err.originalResponse
           ? err.originalResponse.getStatus()
           : 0;
@@ -47,6 +122,12 @@ export async function upload(
           return false;
         }
 
+        retrying = true;
+        onStatus({
+          kind: "retrying",
+          attempt: retryAttempt + 1,
+          of: retryDelays?.length ?? 0,
+        });
         return true;
       },
       onError: function (error: Error | tus.DetailedError) {
@@ -64,10 +145,15 @@ export async function upload(
             : "Upload failed";
 
         console.error(error);
+        onStatus({ kind: "failed", message });
 
         reject(new Error(message));
       },
       onProgress: function (bytesUploaded) {
+        if (retrying) {
+          retrying = false;
+          onStatus(baseStatus);
+        }
         if (typeof onupload === "function") {
           onupload({ loaded: bytesUploaded });
         }

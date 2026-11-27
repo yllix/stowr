@@ -3,12 +3,31 @@ package fbhttp
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/jellydator/ttlcache/v3"
 )
 
-const uploadCacheTTL = 3 * time.Minute
+// uploadCacheTTL is how long an upload may sit idle before it is forgotten
+// and its partial file deleted. A long default lets an interrupted upload
+// (sleeping laptop, dropped network) be resumed later. STOWR_UPLOAD_EXPIRY
+// overrides it with a Go duration such as "6h".
+var uploadCacheTTL = uploadExpiryFromEnv(24 * time.Hour)
+
+func uploadExpiryFromEnv(def time.Duration) time.Duration {
+	v := strings.TrimSpace(os.Getenv("STOWR_UPLOAD_EXPIRY"))
+	if v == "" {
+		return def
+	}
+	d, err := time.ParseDuration(v)
+	if err != nil || d < time.Minute {
+		fmt.Printf("ignoring invalid STOWR_UPLOAD_EXPIRY %q (need a duration of at least 1m)\n", v)
+		return def
+	}
+	return d
+}
 
 // UploadCache is an interface for tracking active uploads.
 // Allows for different backends (e.g. in-memory or redis)
