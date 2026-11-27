@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file. See [commit
 
 ## Unreleased
 
+### Features
+
+* share links: set a download limit when you share. Viewing a file in the browser doesn't count, and neither do the follow-up requests of a download that already started. Once the limit is used up, the link closes like an expired one
+* share links: add a note that's shown to whoever opens the link. The share page also says when the link expires and how many downloads are left
+* share links: the share dialog and Settings → Share Management show each link's downloads, note, password lock and when it was made
+
+### Bug Fixes
+
+* share links: wrong passwords are limited to 10 a minute per link and address, so passwords can't be guessed quickly. The address is the connection's own, not a forwarding header a client could fake
+* share links: new links get a 16-character ID (96 random bits) instead of 8, so they can't be found by guessing. Existing links keep working
+* share links: removing expired links skipped the link after each expired one and could list a link twice
+* share links: an invalid or far-off expiry is refused with a clear error instead of a server error or an overflowed date
+* share links: deleting a link in Share Management now waits for the server, so a failed delete is reported instead of looking like it worked
+* share links: previewing images, audio and video on a shared folder's page no longer uses up downloads
+
+## [3.2.1](https://github.com/yllix/stowr/releases/tag/v3.2.1) (2026-11-27)
+
 ### Bug Fixes
 
 * uploads: "Resume interrupted uploads" now really resumes. Files that are smaller on the server continue from where they stopped instead of being uploaded again from zero. The browser sends the last 1 MiB already on the server and the server checks it byte for byte before appending; if it doesn't match, the file is uploaded from the start and the panel says so. This works after a server restart and from a different browser
@@ -11,12 +28,6 @@ All notable changes to this project will be documented in this file. See [commit
 * uploads: the upload panel shows what each file is doing (resuming, retrying after a lost connection, restarted) and keeps failed uploads listed with the reason until you clear them
 
 ## [3.2.0](https://github.com/yllix/stowr/releases/tag/v3.2.0) (2026-11-26)
-
-### Changes
-
-* release: build only the platforms people run (Linux amd64/arm64/armv7, macOS amd64/arm64, Windows amd64) and only the Alpine image. FreeBSD, OpenBSD, 32-bit x86, armv5/v6, riscv64 and the `s6` image variant are no longer published, which roughly halves release time
-
-## [3.1.0](https://github.com/yllix/stowr/releases/tag/v3.1.0) (2026-11-26)
 
 ### Features
 

@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	fberrors "github.com/yllix/stowr/v3/errors"
 	"github.com/yllix/stowr/v3/share"
@@ -24,21 +25,65 @@ import (
 // would be crackable offline) and the bypass Token — exposing only whether the
 // share is password-protected via HasPassword.
 type shareResponse struct {
-	Hash        string `json:"hash"`
-	Path        string `json:"path"`
-	UserID      uint   `json:"userID"`
-	Expire      int64  `json:"expire"`
-	HasPassword bool   `json:"hasPassword"`
+	Hash         string `json:"hash"`
+	Path         string `json:"path"`
+	UserID       uint   `json:"userID"`
+	Expire       int64  `json:"expire"`
+	HasPassword  bool   `json:"hasPassword"`
+	Note         string `json:"note,omitempty"`
+	Created      int64  `json:"created,omitempty"`
+	MaxDownloads int    `json:"maxDownloads,omitempty"`
+	Downloads    int    `json:"downloads"`
 }
 
 func toShareResponse(l *share.Link) *shareResponse {
 	return &shareResponse{
-		Hash:        l.Hash,
-		Path:        l.Path,
-		UserID:      l.UserID,
-		Expire:      l.Expire,
-		HasPassword: l.PasswordHash != "",
+		Hash:         l.Hash,
+		Path:         l.Path,
+		UserID:       l.UserID,
+		Expire:       l.Expire,
+		HasPassword:  l.PasswordHash != "",
+		Note:         l.Note,
+		Created:      l.Created,
+		MaxDownloads: l.MaxDownloads,
+		Downloads:    l.Downloads,
 	}
+}
+
+// shareHashBytes is how many random bytes make up a share link's ID: 96 bits,
+// so links can't be found by guessing. Links made before this was raised
+// from 6 bytes keep working.
+const shareHashBytes = 12
+
+// maxShareDuration is the longest a share may be set to last.
+const maxShareDuration = 100 * 365 * 24 * time.Hour
+
+// shareDuration turns the expiry fields of a create request into a duration;
+// zero means the share never expires.
+func shareDuration(expires, unit string) (time.Duration, error) {
+	if expires == "" {
+		return 0, nil
+	}
+	num, err := strconv.ParseInt(expires, 10, 64)
+	if err != nil || num < 0 {
+		return 0, fmt.Errorf("invalid expiry %q", expires)
+	}
+
+	var per time.Duration
+	switch unit {
+	case "seconds":
+		per = time.Second
+	case "minutes":
+		per = time.Minute
+	case "days":
+		per = 24 * time.Hour
+	default:
+		per = time.Hour
+	}
+	if num > int64(maxShareDuration/per) {
+		return 0, fmt.Errorf("expiry is too far away")
+	}
+	return time.Duration(num) * per, nil
 }
 
 func toShareResponses(links []*share.Link) []*shareResponse {
@@ -176,36 +221,28 @@ var sharePostHandler = withPermShare(func(w http.ResponseWriter, r *http.Request
 		defer r.Body.Close()
 	}
 
-	bytes := make([]byte, 6)
-	_, err := rand.Read(bytes)
+	add, err := shareDuration(body.Expires, body.Unit)
 	if err != nil {
-		return http.StatusInternalServerError, err
+		return http.StatusBadRequest, err
 	}
-
-	str := base64.URLEncoding.EncodeToString(bytes)
-
-	var expire int64 = 0
-
-	if body.Expires != "" {
-		num, err := strconv.Atoi(body.Expires)
-		if err != nil {
-			return http.StatusInternalServerError, err
-		}
-
-		var add time.Duration
-		switch body.Unit {
-		case "seconds":
-			add = time.Second * time.Duration(num)
-		case "minutes":
-			add = time.Minute * time.Duration(num)
-		case "days":
-			add = time.Hour * 24 * time.Duration(num)
-		default:
-			add = time.Hour * time.Duration(num)
-		}
-
+	var expire int64
+	if add > 0 {
 		expire = time.Now().Add(add).Unix()
 	}
+
+	note := strings.TrimSpace(body.Note)
+	if utf8.RuneCountInString(note) > share.MaxNoteLength {
+		return http.StatusBadRequest, fmt.Errorf("the note is longer than %d characters", share.MaxNoteLength)
+	}
+	if body.MaxDownloads < 0 || body.MaxDownloads > share.MaxDownloadLimit {
+		return http.StatusBadRequest, fmt.Errorf("invalid download limit %d", body.MaxDownloads)
+	}
+
+	bytes := make([]byte, shareHashBytes)
+	if _, err := rand.Read(bytes); err != nil {
+		return http.StatusInternalServerError, err
+	}
+	str := base64.RawURLEncoding.EncodeToString(bytes)
 
 	hash, status, err := getSharePasswordHash(body)
 	if err != nil {
@@ -228,6 +265,9 @@ var sharePostHandler = withPermShare(func(w http.ResponseWriter, r *http.Request
 		UserID:       d.user.ID,
 		PasswordHash: string(hash),
 		Token:        token,
+		Note:         note,
+		Created:      time.Now().Unix(),
+		MaxDownloads: body.MaxDownloads,
 	}
 
 	if err := d.store.Share.Save(s); err != nil {
