@@ -1,19 +1,22 @@
 <template>
   <div
-    v-if="uploadStore.activeUploads.size > 0"
+    v-if="uploadStore.activeUploads.size > 0 || failed.length > 0"
     class="upload-files"
     v-bind:class="{ closed: !open }"
   >
     <div class="card floating">
       <div class="card-title">
-        <h2>
+        <h2 v-if="uploadStore.activeUploads.size > 0">
           {{
             $t("prompts.uploadFiles", {
               files: uploadStore.pendingUploadCount,
             })
           }}
         </h2>
-        <div class="upload-info">
+        <h2 v-else>
+          {{ $t("uploadStatus.failedTitle", { count: failed.length }) }}
+        </h2>
+        <div v-if="uploadStore.activeUploads.size > 0" class="upload-info">
           <div class="upload-speed">{{ speedText }}/s</div>
           <div class="upload-eta">{{ formattedETA }} remaining</div>
           <div class="upload-percentage">{{ sentPercent }}% Completed</div>
@@ -23,6 +26,7 @@
           </div>
         </div>
         <button
+          v-if="uploadStore.activeUploads.size > 0"
           class="action"
           @click="abortAll"
           aria-label="Abort upload"
@@ -61,6 +65,38 @@
               }"
             ></div>
           </div>
+          <div
+            v-if="upload.status"
+            class="file-status"
+            :class="upload.status.kind"
+          >
+            {{ statusText(upload.status) }}
+          </div>
+        </div>
+
+        <div v-if="failed.length > 0" class="failed-uploads">
+          <div class="failed-title">
+            <span>{{
+              $t("uploadStatus.failedTitle", { count: failed.length })
+            }}</span>
+            <button
+              class="button button--flat"
+              @click="uploadStore.clearFailed()"
+            >
+              {{ $t("uploadStatus.clearFailed") }}
+            </button>
+          </div>
+          <div
+            class="file failed"
+            v-for="f in failed"
+            :key="f.path"
+            :title="f.path"
+          >
+            <div class="file-name">
+              <i class="material-icons">error_outline</i> {{ f.name }}
+            </div>
+            <div class="file-status failed">{{ f.message }}</div>
+          </div>
         </div>
       </div>
     </div>
@@ -85,7 +121,30 @@ const eta = ref<number>(Infinity);
 const fileStore = useFileStore();
 const uploadStore = useUploadStore();
 
-const { sentBytes, totalBytes } = storeToRefs(uploadStore);
+const {
+  sentBytes,
+  totalBytes,
+  failedUploads: failed,
+} = storeToRefs(uploadStore);
+const sizeText = partial({ base: 2 });
+
+const statusText = (status: UploadStatus): string => {
+  switch (status.kind) {
+    case "resuming":
+      return t("uploadStatus.resuming", { size: sizeText(status.from) });
+    case "resumed":
+      return t("uploadStatus.resumed", { size: sizeText(status.from) });
+    case "restarted":
+      return t("uploadStatus.restarted");
+    case "retrying":
+      return t("uploadStatus.retrying", {
+        attempt: status.attempt,
+        of: status.of,
+      });
+    case "failed":
+      return t("uploadStatus.failed", { message: status.message });
+  }
+};
 
 const byteToMbyte = partial({ exponent: 2 });
 const byteToKbyte = partial({ exponent: 1 });

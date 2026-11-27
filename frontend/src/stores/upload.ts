@@ -28,6 +28,11 @@ export const useUploadStore = defineStore("upload", () => {
   const lastUpload = ref<number>(-1);
   const totalBytes = ref<number>(0);
   const sentBytes = ref<number>(0);
+  // Uploads that failed, kept with their reason until dismissed so a failure
+  // isn't just a toast that disappears.
+  const failedUploads = ref<{ name: string; path: string; message: string }[]>(
+    []
+  );
 
   //
   // ACTIONS
@@ -38,7 +43,8 @@ export const useUploadStore = defineStore("upload", () => {
     name: string,
     file: File | null,
     overwrite: boolean,
-    type: ResourceType
+    type: ResourceType,
+    resumeFrom?: number
   ) => {
     if (!hasActiveUploads() && !hasPendingUploads()) {
       window.addEventListener("beforeunload", beforeUnload);
@@ -51,6 +57,7 @@ export const useUploadStore = defineStore("upload", () => {
       file,
       overwrite,
       type,
+      resumeFrom,
       totalBytes: file?.size || 1,
       sentBytes: 0,
       // Stores rapidly changing sent bytes value without causing component re-renders
@@ -124,10 +131,22 @@ export const useUploadStore = defineStore("upload", () => {
         };
 
         await api
-          .post(upload.path, upload.file!, upload.overwrite, onUpload)
+          .post(upload.path, upload.file!, upload.overwrite, onUpload, {
+            resumeFrom: upload.resumeFrom,
+            onStatus: (status) => {
+              upload.status = status;
+            },
+          })
           .catch((err) => {
             succeeded = false;
-            if (err.message !== "Upload aborted") $showError(err);
+            if (err.message !== "Upload aborted") {
+              failedUploads.value.push({
+                name: upload.name,
+                path: upload.path,
+                message: err.message,
+              });
+              $showError(err);
+            }
           });
       }
 
@@ -182,15 +201,21 @@ export const useUploadStore = defineStore("upload", () => {
     sentBytes.value = 0;
   };
 
+  const clearFailed = () => {
+    failedUploads.value = [];
+  };
+
   return {
     // STATE
     activeUploads,
     totalBytes,
     sentBytes,
+    failedUploads,
 
     // ACTIONS
     upload,
     abort,
+    clearFailed,
 
     // GETTERS
     pendingUploadCount,

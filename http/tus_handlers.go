@@ -1,6 +1,7 @@
 package fbhttp
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -84,6 +85,11 @@ func tusPostHandler(cache UploadCache) handleFunc {
 
 		fileFlags := os.O_CREATE | os.O_WRONLY
 
+		// Continue an interrupted upload into the partial file already on disk.
+		if file != nil && r.URL.Query().Get("resume") == "true" {
+			return tusResumeUpload(w, r, d, cache, file)
+		}
+
 		// if file exists
 		if file != nil {
 			if file.IsDir {
@@ -143,6 +149,88 @@ func tusPostHandler(cache UploadCache) handleFunc {
 		w.Header().Set("Location", basePath+"/api/tus"+r.URL.EscapedPath())
 		return http.StatusCreated, nil
 	})
+}
+
+// resumeSampleMax is the most data a client may send to prove that the
+// partial file on the server holds the start of the file it is uploading.
+const resumeSampleMax = 1 << 20
+
+// errResumeMismatch is the body of the 409 answer when a partial file can't be
+// resumed; the client then uploads from the beginning instead.
+const errResumeMismatch = "the partial file on the server does not match this file"
+
+// tusResumeUpload re-registers an interrupted upload so the client can carry
+// on from the bytes already on disk. That is needed whenever the server lost
+// track of the upload: it restarted, or the upload sat idle past the cache
+// expiry. The client proves the partial file is the start of the same file by
+// sending the bytes just before the resume offset (up to 1 MiB); they must
+// match the file on disk exactly. The upload then continues through the usual
+// HEAD and PATCH requests.
+func tusResumeUpload(w http.ResponseWriter, r *http.Request, d *data, cache UploadCache, file *files.FileInfo) (int, error) {
+	if file.IsDir {
+		return http.StatusBadRequest, fmt.Errorf("cannot upload to a directory %s", file.RealPath())
+	}
+	// Appending to an existing file changes it.
+	if !d.user.Perm.Modify {
+		return http.StatusForbidden, nil
+	}
+
+	uploadLength, err := getUploadLength(r)
+	if err != nil || uploadLength < 0 {
+		return http.StatusBadRequest, fmt.Errorf("invalid upload length: %w", err)
+	}
+	offset, err := strconv.ParseInt(r.Header.Get("Stowr-Resume-Offset"), 10, 64)
+	if err != nil || offset <= 0 {
+		return http.StatusBadRequest, fmt.Errorf("invalid resume offset")
+	}
+
+	sample, err := io.ReadAll(io.LimitReader(r.Body, resumeSampleMax+1))
+	if err != nil {
+		return http.StatusBadRequest, fmt.Errorf("could not read resume sample: %w", err)
+	}
+	n := int64(len(sample))
+	switch {
+	case n == 0 || n > resumeSampleMax || n > offset:
+		return http.StatusBadRequest, fmt.Errorf("invalid resume sample")
+	case offset != file.Size, offset >= uploadLength:
+		// The partial file changed size, or is not shorter than the file
+		// being uploaded: there is nothing to resume.
+		return resumeConflict(w)
+	}
+
+	existing, err := d.user.Fs.Open(r.URL.Path)
+	if err != nil {
+		return errToStatus(err), err
+	}
+	defer existing.Close()
+
+	onDisk := make([]byte, n)
+	if _, err := existing.ReadAt(onDisk, offset-n); err != nil && !errors.Is(err, io.EOF) {
+		return http.StatusInternalServerError, fmt.Errorf("could not read partial file: %w", err)
+	}
+	if !bytes.Equal(onDisk, sample) {
+		return resumeConflict(w)
+	}
+
+	uploadPath := r.URL.Path
+	cache.Register(file.RealPath(), uploadLength, func() error {
+		return d.user.Fs.Remove(uploadPath)
+	})
+
+	basePath := "/" + strings.Trim(strings.TrimSpace(d.server.BaseURL), "/")
+	if basePath == "/" {
+		basePath = ""
+	}
+	w.Header().Set("Location", basePath+"/api/tus"+r.URL.EscapedPath())
+	w.Header().Set("Upload-Offset", strconv.FormatInt(offset, 10))
+	return http.StatusCreated, nil
+}
+
+func resumeConflict(w http.ResponseWriter) (int, error) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusConflict)
+	_, _ = io.WriteString(w, errResumeMismatch)
+	return 0, nil
 }
 
 func tusHeadHandler(cache UploadCache) handleFunc {

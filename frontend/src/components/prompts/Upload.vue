@@ -83,16 +83,7 @@ const uploadInput = async (event: Event) => {
       confirm: (event: Event, result: Array<ConflictingResource>) => {
         event.preventDefault();
         layoutStore.closeHovers();
-        for (let i = result.length - 1; i >= 0; i--) {
-          const item = result[i];
-          if (item.checked.length == 2) {
-            continue;
-          } else if (item.checked.length == 1 && item.checked[0] == "origin") {
-            uploadFiles[item.index].overwrite = true;
-          } else {
-            uploadFiles.splice(item.index, 1);
-          }
-        }
+        upload.applyConflictResolution(uploadFiles, result);
         if (uploadFiles.length > 0) {
           upload.handleFiles(uploadFiles, path);
         }

@@ -207,7 +207,9 @@ const humanTime = (modified: string | number | undefined) => {
 const resume = (event: Event) => {
   conflict.value.forEach((item) => {
     if (item.isSmallerOnServer) {
+      // Continue the interrupted upload from what is already on the server.
       item.checked = ["origin"];
+      item.resume = true;
     } else {
       item.checked = ["dest"];
     }

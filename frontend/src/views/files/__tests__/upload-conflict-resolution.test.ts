@@ -45,7 +45,11 @@ vi.mock("@/utils/constants", () => ({ enableExec: false }));
 vi.mock("@/utils/auth", () => ({}));
 vi.mock("@/router", () => ({ default: {} }));
 vi.mock("@/i18n", () => ({ default: {} }));
-vi.mock("@/utils/upload", () => ({
+vi.mock("@/utils/upload", async (importOriginal) => ({
+  // The real resolution logic, so these tests exercise what ships.
+  applyConflictResolution: (
+    await importOriginal<typeof import("@/utils/upload")>()
+  ).applyConflictResolution,
   checkConflict: harness.checkConflict,
   scanFiles: harness.scanFiles,
   handleFiles: harness.handleFiles,
@@ -208,7 +212,8 @@ describe("upload conflict resolution", () => {
       "late-file.txt",
       nonconflicting.file,
       false,
-      "text"
+      "text",
+      undefined
     );
   });
 
