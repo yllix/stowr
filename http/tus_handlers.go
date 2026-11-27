@@ -200,9 +200,12 @@ func tusResumeUpload(w http.ResponseWriter, r *http.Request, d *data, cache Uplo
 	}
 
 	// The path is already checked and the filesystem is scoped to the user;
-	// rooting and cleaning it here as well keeps it from climbing out with
-	// "..", whatever the caller did.
-	uploadPath := path.Clean("/" + r.URL.Path)
+	// constraining it here as well keeps it from climbing out with "..",
+	// whatever the caller did.
+	uploadPath := strings.TrimPrefix(path.Clean("/"+r.URL.Path), "/")
+	if uploadPath == "" || uploadPath == "." || uploadPath == ".." || strings.HasPrefix(uploadPath, "../") {
+		return http.StatusBadRequest, fmt.Errorf("invalid upload path")
+	}
 	existing, err := d.user.Fs.Open(uploadPath)
 	if err != nil {
 		return errToStatus(err), err
