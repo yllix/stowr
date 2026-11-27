@@ -14,6 +14,7 @@ import (
 	"github.com/asdine/storm/v3"
 	"github.com/spf13/afero"
 
+	"github.com/yllix/stowr/v3/files"
 	"github.com/yllix/stowr/v3/settings"
 	"github.com/yllix/stowr/v3/share"
 	"github.com/yllix/stowr/v3/storage"
@@ -100,7 +101,7 @@ func TestSharePostRejectsBadInput(t *testing.T) {
 	}
 }
 
-// publicShareStorage stores link and a user owning an in-memory /file.txt.
+// publicShareStorage stores link and a user owning /file.txt.
 func publicShareStorage(t *testing.T, link *share.Link) *storage.Storage {
 	t.Helper()
 	db, err := storm.Open(filepath.Join(t.TempDir(), "db"))
@@ -125,7 +126,8 @@ func publicShareStorage(t *testing.T, link *share.Link) *storage.Storage {
 	if err := st.Share.Save(link); err != nil {
 		t.Fatal(err)
 	}
-	fs := afero.NewMemMapFs()
+	// A real directory: the symlink-confining filesystem resolves paths on disk.
+	fs := files.NewScopedFs(afero.NewOsFs(), t.TempDir())
 	if err := afero.WriteFile(fs, "/file.txt", []byte("hello"), 0o600); err != nil {
 		t.Fatal(err)
 	}
