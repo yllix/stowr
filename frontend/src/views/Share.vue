@@ -39,9 +39,15 @@
       </h2>
     </div>
     <div v-else-if="error">
-      <div v-if="error.status === 401">
+      <div v-if="error.status === 401 || error.status === 429">
         <div class="card floating" id="password" style="z-index: 9999999">
-          <div v-if="attemptedPasswordLogin" class="share__wrong__password">
+          <div v-if="error.status === 429" class="share__wrong__password">
+            {{ t("shareLinks.tooManyAttempts") }}
+          </div>
+          <div
+            v-else-if="attemptedPasswordLogin"
+            class="share__wrong__password"
+          >
             {{ t("login.wrongCredentials") }}
           </div>
           <div class="card-title">
@@ -71,6 +77,11 @@
         </div>
         <div class="overlay" />
       </div>
+      <h2 v-else-if="error.status === 410" class="message share-gone">
+        <i class="material-icons">link_off</i>
+        <span>{{ t("shareLinks.gone") }}</span>
+        <small>{{ t("shareLinks.goneHint") }}</small>
+      </h2>
       <errors v-else :errorCode="error.status" />
     </div>
     <div v-else-if="req !== null">
@@ -90,6 +101,35 @@
                 ? t("download.downloadFolder")
                 : t("download.downloadFile")
             }}
+          </div>
+          <div
+            v-if="shareInfoLines.length"
+            class="share__box__element share-info"
+          >
+            <template v-if="req.share?.note">
+              <strong>{{ t("shareLinks.noteFrom") }}</strong>
+              <p class="share-info__note">{{ req.share.note }}</p>
+            </template>
+            <p
+              v-for="line in shareInfoLines.filter((l) => l !== 'note')"
+              :key="line"
+              class="share-info__line"
+            >
+              <template v-if="line === 'expire'">
+                <i class="material-icons">schedule</i>
+                {{ t("shareLinks.expiresIn", { time: expiresIn }) }}
+              </template>
+              <template v-else>
+                <i class="material-icons">file_download</i>
+                {{
+                  t(
+                    "shareLinks.downloadsLeft",
+                    { count: req.share?.downloadsLeft ?? 0 },
+                    req.share?.downloadsLeft ?? 0
+                  )
+                }}
+              </template>
+            </p>
           </div>
           <div
             v-if="!req.isDir"
@@ -359,9 +399,10 @@ const icon = computed(() => {
 const link = computed(() => (req.value ? api.getDownloadURL(req.value) : ""));
 const raw = computed(() => {
   if (!req.value || !req.value.items[fileStore.selected[0]]) return "";
+  // inline: previewing on this page must not use up a download
   return createURL(
     `api/public/dl/${hash.value}${req.value.items[fileStore.selected[0]].path}`,
-    { token: token.value }
+    { token: token.value, inline: "true" }
   );
 });
 const inlineLink = computed(() =>
@@ -377,6 +418,18 @@ const humanSize = computed(() => {
   }
 });
 const humanTime = computed(() => dayjs(req.value?.modified).fromNow());
+const shareInfoLines = computed(() => {
+  const info = req.value?.share;
+  if (!info) return [];
+  const lines: string[] = [];
+  if (info.note) lines.push("note");
+  if (info.expire) lines.push("expire");
+  if (info.downloadsLeft !== undefined) lines.push("downloads");
+  return lines;
+});
+const expiresIn = computed(() =>
+  req.value?.share?.expire ? dayjs(req.value.share.expire * 1000).fromNow() : ""
+);
 const modTime = computed(() =>
   req.value
     ? new Date(Date.parse(req.value.modified)).toLocaleString()
@@ -531,6 +584,45 @@ onBeforeUnmount(() => {
 
 #shareList {
   overflow-y: scroll;
+}
+
+.share-info {
+  display: block !important;
+  height: auto !important;
+  line-height: 1.5;
+}
+
+.share-info__note {
+  margin: 0.25em 0 0.5em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.share-info__line {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  margin: 0.2em 0;
+  font-size: 0.9em;
+  opacity: 0.85;
+}
+
+.share-info__line .material-icons {
+  font-size: 1.1em;
+}
+
+.share-gone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4em;
+  padding-top: 3em !important;
+}
+
+.share-gone small {
+  font-size: 0.6em;
+  font-weight: normal;
+  opacity: 0.7;
 }
 
 @media (min-width: 930px) {

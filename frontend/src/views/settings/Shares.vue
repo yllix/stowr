@@ -11,7 +11,9 @@
           <table>
             <tr>
               <th>{{ t("settings.path") }}</th>
-              <th>{{ t("settings.shareDuration") }}</th>
+              <th>{{ t("shareLinks.expires") }}</th>
+              <th>{{ t("shareLinks.downloads") }}</th>
+              <th>{{ t("shareLinks.created") }}</th>
               <th v-if="authStore.user?.perm.admin">
                 {{ t("settings.username") }}
               </th>
@@ -20,14 +22,29 @@
             </tr>
 
             <tr v-for="link in links" :key="link.hash">
-              <td>
+              <td class="share-path">
                 <a :href="buildLink(link)" target="_blank">{{ link.path }}</a>
+                <i
+                  v-if="link.hasPassword"
+                  class="material-icons share-path__lock"
+                  :title="t('shareLinks.passwordProtected')"
+                  >lock</i
+                >
+                <span v-if="link.note" class="share-path__note">{{
+                  link.note
+                }}</span>
               </td>
               <td>
                 <template v-if="link.expire !== 0">{{
                   humanTime(link.expire)
                 }}</template>
                 <template v-else>{{ t("permanent") }}</template>
+              </td>
+              <td>{{ downloadsText(link) }}</td>
+              <td>
+                <template v-if="link.created">{{
+                  humanTime(link.created)
+                }}</template>
               </td>
               <td v-if="authStore.user?.perm.admin">{{ link.username }}</td>
               <td class="small">
@@ -129,16 +146,16 @@ const copyToClipboard = (text: string) => {
   );
 };
 
-const deleteLink = async (event: Event, link: any) => {
+const deleteLink = async (event: Event, link: Share) => {
   event.preventDefault();
 
   layoutStore.showHover({
     prompt: "share-delete",
-    confirm: () => {
+    confirm: async () => {
       layoutStore.closeHovers();
 
       try {
-        api.remove(link.hash);
+        await api.remove(link.hash);
         links.value = links.value.filter((item) => item.hash !== link.hash);
         $showSuccess(t("settings.shareDeleted"));
       } catch (err) {
@@ -153,7 +170,32 @@ const humanTime = (time: number) => {
   return dayjs(time * 1000).fromNow();
 };
 
+const downloadsText = (link: Share) => {
+  const count = link.downloads ?? 0;
+  return link.maxDownloads
+    ? t("shareLinks.downloadsOf", { count, max: link.maxDownloads })
+    : String(count);
+};
+
 const buildLink = (share: Share) => {
   return api.getShareURL(share);
 };
 </script>
+
+<style scoped>
+.share-path__lock {
+  font-size: 1em;
+  vertical-align: middle;
+  opacity: 0.7;
+}
+
+.share-path__note {
+  display: block;
+  max-width: 24em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+</style>

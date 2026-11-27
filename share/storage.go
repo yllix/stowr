@@ -1,6 +1,7 @@
 package share
 
 import (
+	"sync"
 	"time"
 
 	fberrors "github.com/yllix/stowr/v3/errors"
@@ -21,6 +22,9 @@ type StorageBackend interface {
 // Storage is a storage.
 type Storage struct {
 	back StorageBackend
+	// counting serializes download counting, so concurrent downloads can't
+	// both read the same count and go past the limit.
+	counting sync.Mutex
 }
 
 // NewStorage creates a share links storage from a backend.
@@ -28,44 +32,38 @@ func NewStorage(back StorageBackend) *Storage {
 	return &Storage{back: back}
 }
 
-// All wraps a StorageBackend.All.
-func (s *Storage) All() ([]*Link, error) {
-	links, err := s.back.All()
-
-	if err != nil {
-		return nil, err
-	}
-
-	for i, link := range links {
-		if link.Expire != 0 && link.Expire <= time.Now().Unix() {
+// live deletes the expired links and returns the rest.
+func (s *Storage) live(links []*Link) ([]*Link, error) {
+	now := time.Now()
+	kept := links[:0]
+	for _, link := range links {
+		if link.Expired(now) {
 			if err := s.Delete(link.Hash); err != nil {
 				return nil, err
 			}
-			links = append(links[:i], links[i+1:]...)
+			continue
 		}
+		kept = append(kept, link)
 	}
+	return kept, nil
+}
 
-	return links, nil
+// All wraps a StorageBackend.All.
+func (s *Storage) All() ([]*Link, error) {
+	links, err := s.back.All()
+	if err != nil {
+		return nil, err
+	}
+	return s.live(links)
 }
 
 // FindByUserID wraps a StorageBackend.FindByUserID.
 func (s *Storage) FindByUserID(id uint) ([]*Link, error) {
 	links, err := s.back.FindByUserID(id)
-
 	if err != nil {
 		return nil, err
 	}
-
-	for i, link := range links {
-		if link.Expire != 0 && link.Expire <= time.Now().Unix() {
-			if err := s.Delete(link.Hash); err != nil {
-				return nil, err
-			}
-			links = append(links[:i], links[i+1:]...)
-		}
-	}
-
-	return links, nil
+	return s.live(links)
 }
 
 // GetByHash wraps a StorageBackend.GetByHash.
@@ -75,7 +73,7 @@ func (s *Storage) GetByHash(hash string) (*Link, error) {
 		return nil, err
 	}
 
-	if link.Expire != 0 && link.Expire <= time.Now().Unix() {
+	if link.Expired(time.Now()) {
 		if err := s.Delete(link.Hash); err != nil {
 			return nil, err
 		}
@@ -93,21 +91,30 @@ func (s *Storage) GetPermanent(path string, id uint) (*Link, error) {
 // Gets wraps a StorageBackend.Gets
 func (s *Storage) Gets(path string, id uint) ([]*Link, error) {
 	links, err := s.back.Gets(path, id)
-
 	if err != nil {
 		return nil, err
 	}
+	return s.live(links)
+}
 
-	for i, link := range links {
-		if link.Expire != 0 && link.Expire <= time.Now().Unix() {
-			if err := s.Delete(link.Hash); err != nil {
-				return nil, err
-			}
-			links = append(links[:i], links[i+1:]...)
-		}
+// CountDownload records one download through the link. It returns false,
+// recording nothing, when the link has already used up its download limit.
+func (s *Storage) CountDownload(hash string) (bool, error) {
+	s.counting.Lock()
+	defer s.counting.Unlock()
+
+	link, err := s.GetByHash(hash)
+	if err != nil {
+		return false, err
 	}
-
-	return links, nil
+	if link.Exhausted() {
+		return false, nil
+	}
+	link.Downloads++
+	if err := s.back.Save(link); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // Save wraps a StorageBackend.Save

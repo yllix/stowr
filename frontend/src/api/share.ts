@@ -6,7 +6,7 @@ export async function list() {
 
 export async function get(url: string) {
   url = removePrefix(url);
-  return fetchJSON<Share>(`/api/share${url}`);
+  return fetchJSON<Share[]>(`/api/share${url}`);
 }
 
 export async function remove(hash: string) {
@@ -15,28 +15,18 @@ export async function remove(hash: string) {
   });
 }
 
-export async function create(
-  url: string,
-  password = "",
-  expires = "",
-  unit = "hours"
-) {
+export async function create(url: string, options: ShareOptions = {}) {
   url = removePrefix(url);
-  url = `/api/share${url}`;
-  if (expires !== "") {
-    url += `?expires=${expires}&unit=${unit}`;
-  }
-  let body = "{}";
-  if (password != "" || expires !== "" || unit !== "hours") {
-    body = JSON.stringify({
-      password: password,
-      expires: expires.toString(), // backend expects string not number
-      unit: unit,
-    });
-  }
-  return fetchJSON(url, {
+  return fetchJSON<Share>(`/api/share${url}`, {
     method: "POST",
-    body: body,
+    body: JSON.stringify({
+      password: options.password ?? "",
+      // the backend expects a string, and "" for no expiry
+      expires: options.expires ? options.expires.toString() : "",
+      unit: options.unit ?? "hours",
+      note: options.note ?? "",
+      maxDownloads: options.maxDownloads ?? 0,
+    }),
   });
 }
 

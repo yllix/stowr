@@ -11,6 +11,7 @@ import (
 	"github.com/yllix/stowr/v3/rules"
 	"github.com/yllix/stowr/v3/runner"
 	"github.com/yllix/stowr/v3/settings"
+	"github.com/yllix/stowr/v3/share"
 	"github.com/yllix/stowr/v3/storage"
 	"github.com/yllix/stowr/v3/users"
 )
@@ -24,6 +25,8 @@ type data struct {
 	store    *storage.Storage
 	user     *users.User
 	raw      interface{}
+	// share is the link a public share request came in through.
+	share *share.Link
 
 	// checkerPrefix is prepended to every path before evaluating rules. It is
 	// set when the user's filesystem has been rebased onto a subdirectory (as

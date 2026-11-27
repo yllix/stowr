@@ -27,6 +27,12 @@ var withHashFile = func(fn handleFunc) handleFunc {
 			return status, err
 		}
 
+		// A link that has used up its downloads is closed, like an expired one.
+		if link.Exhausted() {
+			return http.StatusGone, nil
+		}
+		d.share = link
+
 		user, err := d.store.Users.Get(d.server.Root, d.server.FollowExternalSymlinks, link.UserID)
 		if err != nil {
 			return errToStatus(err), err
@@ -116,19 +122,66 @@ func ifPathWithName(r *http.Request) (id, filePath string) {
 	}
 }
 
+// publicShareInfo tells whoever opens a share what the owner said about it
+// and how long it stays open. It never carries the password or token.
+type publicShareInfo struct {
+	Note          string `json:"note,omitempty"`
+	Expire        int64  `json:"expire,omitempty"`
+	DownloadsLeft *int   `json:"downloadsLeft,omitempty"`
+}
+
+type publicShareResponse struct {
+	*files.FileInfo
+	Share publicShareInfo `json:"share"`
+}
+
+func toPublicShareInfo(l *share.Link) publicShareInfo {
+	info := publicShareInfo{Note: l.Note, Expire: l.Expire}
+	if left, limited := l.DownloadsLeft(); limited {
+		info.DownloadsLeft = &left
+	}
+	return info
+}
+
 var publicShareHandler = withHashFile(func(w http.ResponseWriter, r *http.Request, d *data) (int, error) {
 	file := d.raw.(*files.FileInfo)
 
 	if file.IsDir {
 		file.Sorting = files.Sorting{By: "name", Asc: false}
 		file.ApplySort()
-		return renderJSON(w, r, file)
 	}
 
-	return renderJSON(w, r, file)
+	return renderJSON(w, r, publicShareResponse{FileInfo: file, Share: toPublicShareInfo(d.share)})
 })
 
+// countsAsDownload reports whether a request through a share uses up one of
+// its downloads. Viewing a file in the browser doesn't, and neither do the
+// follow-up range requests of a download that already started; a download
+// manager resuming from the start does.
+func countsAsDownload(r *http.Request) bool {
+	if r.Method == http.MethodHead || r.URL.Query().Get("inline") == "true" {
+		return false
+	}
+	rng := r.Header.Get("Range")
+	return rng == "" || strings.HasPrefix(strings.TrimSpace(rng), "bytes=0-")
+}
+
 var publicDlHandler = withHashFile(func(w http.ResponseWriter, r *http.Request, d *data) (int, error) {
+	if countsAsDownload(r) {
+		// Every link counts its downloads so the owner can see it's used, but
+		// only a limited link refuses one: for an unlimited link a failure to
+		// record it must not stop the download.
+		ok, err := d.store.Share.CountDownload(d.share.Hash)
+		if d.share.MaxDownloads > 0 {
+			if err != nil {
+				return errToStatus(err), err
+			}
+			if !ok {
+				return http.StatusGone, nil
+			}
+		}
+	}
+
 	file := d.raw.(*files.FileInfo)
 	if !file.IsDir {
 		return rawFileHandler(w, r, file)
@@ -154,12 +207,21 @@ func authenticateShareRequest(r *http.Request, l *share.Link) (int, error) {
 	if password == "" {
 		return http.StatusUnauthorized, nil
 	}
+
+	// Slow down password guessing: after too many wrong passwords for this
+	// link from one address, refuse to check any more for a while.
+	key := l.Hash + "|" + clientAddr(r)
+	if sharePasswordAttempts.blocked(key) {
+		return http.StatusTooManyRequests, nil
+	}
 	if err := bcrypt.CompareHashAndPassword([]byte(l.PasswordHash), []byte(password)); err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			sharePasswordAttempts.fail(key)
 			return http.StatusUnauthorized, nil
 		}
 		return 0, err
 	}
+	sharePasswordAttempts.reset(key)
 
 	return 0, nil
 }

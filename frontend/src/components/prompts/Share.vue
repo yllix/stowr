@@ -8,21 +8,36 @@
       <div class="card-content">
         <table>
           <tr>
-            <th>#</th>
-            <th>{{ $t("settings.shareDuration") }}</th>
+            <th>{{ $t("shareLinks.link") }}</th>
+            <th>{{ $t("shareLinks.expires") }}</th>
+            <th>{{ $t("shareLinks.downloads") }}</th>
             <th></th>
             <th></th>
             <th></th>
           </tr>
 
           <tr v-for="link in links" :key="link.hash">
-            <td>{{ link.hash }}</td>
+            <td class="share-link">
+              <span class="share-link__hash">
+                {{ link.hash }}
+                <i
+                  v-if="link.hasPassword"
+                  class="material-icons share-link__lock"
+                  :title="$t('shareLinks.passwordProtected')"
+                  >lock</i
+                >
+              </span>
+              <span v-if="link.note" class="share-link__note">{{
+                link.note
+              }}</span>
+            </td>
             <td>
               <template v-if="link.expire !== 0">{{
                 humanTime(link.expire)
               }}</template>
               <template v-else>{{ $t("permanent") }}</template>
             </td>
+            <td>{{ downloadsText(link) }}</td>
             <td class="small">
               <button
                 class="action"
@@ -112,8 +127,32 @@
           class="input input--block"
           type="password"
           v-model.trim="password"
+          autocomplete="new-password"
           tabindex="3"
         />
+        <p>{{ $t("shareLinks.downloadLimit") }}</p>
+        <div class="input-group input">
+          <vue-number-input
+            center
+            controls
+            size="small"
+            :max="1000000"
+            :min="0"
+            @keyup.enter="submit"
+            v-model="maxDownloads"
+            tabindex="4"
+          />
+        </div>
+        <p class="share-hint">{{ $t("shareLinks.downloadLimitHint") }}</p>
+        <p>{{ $t("shareLinks.note") }}</p>
+        <textarea
+          class="input input--block share-note"
+          v-model="note"
+          maxlength="500"
+          rows="2"
+          :placeholder="$t('shareLinks.notePlaceholder')"
+          tabindex="5"
+        ></textarea>
       </div>
 
       <div class="card-action">
@@ -122,7 +161,7 @@
           @click="() => switchListing()"
           :aria-label="$t('buttons.cancel')"
           :title="$t('buttons.cancel')"
-          tabindex="5"
+          tabindex="7"
         >
           {{ $t("buttons.cancel") }}
         </button>
@@ -132,7 +171,7 @@
           @click="submit"
           :aria-label="$t('buttons.share')"
           :title="$t('buttons.share')"
-          tabindex="4"
+          tabindex="6"
         >
           {{ $t("buttons.share") }}
         </button>
@@ -158,6 +197,8 @@ export default {
       links: [],
       clip: null,
       password: "",
+      note: "",
+      maxDownloads: 0,
       listing: true,
     };
   },
@@ -220,18 +261,13 @@ export default {
     },
     submit: async function () {
       try {
-        let res = null;
-
-        if (!this.time) {
-          res = await api.share.create(this.url, this.password);
-        } else {
-          res = await api.share.create(
-            this.url,
-            this.password,
-            this.time,
-            this.unit
-          );
-        }
+        const res = await api.share.create(this.url, {
+          password: this.password,
+          expires: this.time || undefined,
+          unit: this.unit,
+          note: this.note.trim(),
+          maxDownloads: this.maxDownloads || 0,
+        });
 
         this.links.push(res);
         this.sort();
@@ -239,6 +275,8 @@ export default {
         this.time = 0;
         this.unit = "hours";
         this.password = "";
+        this.note = "";
+        this.maxDownloads = 0;
 
         this.listing = true;
       } catch (e) {
@@ -257,6 +295,12 @@ export default {
       } catch (e) {
         this.$showError(e);
       }
+    },
+    downloadsText(link) {
+      const count = link.downloads || 0;
+      return link.maxDownloads
+        ? this.$t("shareLinks.downloadsOf", { count, max: link.maxDownloads })
+        : String(count);
     },
     humanTime(time) {
       return dayjs(time * 1000).fromNow();
@@ -290,3 +334,39 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.share-link__hash {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+}
+
+.share-link__lock {
+  font-size: 1em;
+  opacity: 0.7;
+}
+
+.share-link__note {
+  display: block;
+  max-width: 16em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+
+.share-note {
+  resize: vertical;
+  font: inherit;
+}
+
+.share-hint {
+  margin-top: 0.25em;
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+</style>

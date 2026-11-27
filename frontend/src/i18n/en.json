@@ -380,5 +380,25 @@
     "failed": "Failed: {message}",
     "failedTitle": "Failed uploads ({count})",
     "clearFailed": "Clear"
+  },
+  "shareLinks": {
+    "note": "Note (optional)",
+    "notePlaceholder": "Shown to whoever opens the link",
+    "downloadLimit": "Download limit",
+    "downloadLimitHint": "0 means no limit. Viewing a file in the browser doesn't count.",
+    "downloads": "Downloads",
+    "downloadsOf": "{count} of {max}",
+    "created": "Created",
+    "expires": "Expires",
+    "never": "Never",
+    "passwordProtected": "Password protected",
+    "link": "Link",
+    "open": "Open link",
+    "expiresIn": "This link expires {time}.",
+    "downloadsLeft": "No downloads left | 1 download left | {count} downloads left",
+    "noteFrom": "Note from the owner",
+    "gone": "This link is no longer available",
+    "goneHint": "It has expired, reached its download limit, or been removed by its owner.",
+    "tooManyAttempts": "Too many wrong passwords. Wait a minute and try again."
   }
 }
